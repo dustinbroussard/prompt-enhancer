@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  />
+  <title>Prompt Enhancer · OpenRouter</title>
+  <meta name="color-scheme" content="light dark" />
+  <meta name="referrer" content="same-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://openrouter.ai; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'">
+  <meta name="theme-color" content="#1e40af" />
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
+  <link rel="icon" href="./icons/icon-512.png" sizes="512x512">
+  <style>
+    :root{
+      --bg: canvas; --fg: canvastext; --muted: color-mix(in oklab, var(--fg) 60%, transparent);
+      --card: color-mix(in oklab, var(--bg) 85%, var(--fg) 5%);
+      /* darker accent to meet contrast with white text */
+      --accent: #1e40af;
+      --radius: 14px;
+      --shadow: 0 8px 30px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      background: var(--bg); color: var(--fg);
+    }
+    header{
+      padding: 14px; position: sticky; top: 0; backdrop-filter: blur(6px);
+      background: color-mix(in oklab, var(--bg) 80%, transparent);
+      border-bottom: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      z-index: 3;
+    }
+    .wrap{max-width: 920px; margin: 0 auto; padding: 14px}
+    .row{display:flex; gap:10px; flex-wrap: wrap; align-items:center}
+    .grow{flex:1 1 240px}
+    input, select, button, textarea{
+      width:100%; padding: 12px 14px; border-radius: var(--radius);
+      border: 1px solid color-mix(in oklab, var(--fg) 18%, transparent);
+      background: var(--card); color: var(--fg);
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus{ border-color: var(--accent) }
+    button{
+      cursor:pointer; border:none; background: var(--accent); color: white; font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+    button.ghost{ background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); color: var(--fg) }
+    button:disabled{ opacity:.6; cursor:not-allowed }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    main{ padding-block: 10px 40px }
+    .card{
+      background: var(--card); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      border-radius: calc(var(--radius) + 4px); padding: 14px; box-shadow: var(--shadow);
+    }
+    .label{ font-size: 12px; opacity:.7; margin-bottom:6px }
+    textarea{ min-height: 130px; resize: vertical }
+    .out{
+      min-height: 160px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .actions{ display:flex; gap:10px; flex-wrap: wrap }
+    .muted{ opacity:.7 }
+    .small{ font-size: 12px }
+    .right{ margin-left:auto }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px;
+      background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+    }
+    .spinner{ width:14px; height:14px; border-radius:50%; border:2px solid currentColor; border-right-color: transparent; animation:spin 0.8s linear infinite }
+    @keyframes spin{ to{ transform: rotate(1turn) } }
+    .error{ border-color: #e33; color: #e33; background: color-mix(in oklab, #e33 10%, transparent)}
+    .footer{ text-align:center; opacity:.7; font-size: 10px; margin-top: 18px }
+    .switch { display:inline-flex; gap:5px; align-items:center; }
+    @media (prefers-reduced-motion: reduce){
+      .spinner{ animation: none }
+    }
+    .history{
+      display: grid; gap: 10px;
+    }
+    .history-item{
+      padding: 10px; border-radius: 10px;
+      background: color-mix(in oklab, var(--bg) 94%, var(--fg) 6%);
+      border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+    }
+    .history-actions{ display:flex; gap:8px; margin-top:8px; flex-wrap: wrap }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap row">
+      <div class="grow">
+        <label for="apiKey" class="label">OpenRouter API Key (stored locally)</label>
+        <div class="row" style="gap:8px">
+          <input id="apiKey" class="grow" placeholder="or-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" aria-describedby="apiKeyHelp" />
+          <button id="saveKeyBtn" type="button" style="flex:0 0 auto; min-width:110px">Save Key</button>
+          <button id="hideKeyBtn" class="ghost" type="button" style="flex:0 0 auto">Hide</button>
+        </div>
+        <div id="apiKeyHelp" class="small muted" style="margin-top:6px">
+          Tip: use a low-limit key or the optional proxy below to avoid exposing secrets.
+        </div>
+      </div>
+      <div style="min-width:220px" class="grow">
+        <label for="model" class="label">Model</label>
+        <select id="model" aria-describedby="modelHelp"></select>
+        <div class="small muted" style="margin-top:6px">Only models with zero pricing are shown (when available).</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" style="margin-bottom:14px">
+      <label for="input" class="label">Your raw prompt</label>
+      <textarea id="input" placeholder="Describe what you want. I’ll rewrite it into a crisp, structured, high-signal prompt." aria-describedby="inputHelp"></textarea>
+      <div class="row" style="margin-top:10px; align-items:center;">
+        <div class="switch">
+          <input type="checkbox" id="stream" checked />
+          <label for="stream">Stream</label>
+        </div>
+        <div class="switch">
+          <input type="checkbox" id="reasoning" />
+          <label for="reasoning">Web Search</label>
+        </div>
+        <div class="switch">
+          <input type="checkbox" id="proxyMode" />
+          <label for="proxyMode">Use Proxy</label>
+        </div>
+        <span class="right small muted">Latency depends on model + internet.</span>
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <button id="enhanceBtn" type="button">Enhance Prompt</button>
+        <button id="retryBtn" class="ghost" type="button" disabled>Retry</button>
+        <button id="copyBtn" class="ghost" type="button" disabled>Copy</button>
+        <button id="clearBtn" class="ghost" type="button">Clear</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="label">Enhanced prompt</div>
+      <div id="out" class="out" role="region" aria-live="polite" aria-label="Enhanced prompt output"></div>
+      <div id="meta" class="small muted" style="margin-top:10px" role="status" aria-live="polite"></div>
+      <div id="err" class="small error pill" role="alert" style="display:none; margin-top:10px"></div>
+    </section>
+
+    <section class="card" aria-labelledby="historyTitle" style="margin-top:14px">
+      <div id="historyTitle" class="label">History (last 5)</div>
+      <div id="history" class="history" aria-live="polite"></div>
+      <div class="actions" style="margin-top:10px">
+        <button id="clearHistoryBtn" class="ghost" type="button">Clear History</button>
+      </div>
+    </section>
+
+    <section class="card" id="installBanner" role="dialog" aria-labelledby="installTitle" aria-modal="false" style="display:none; margin-top:14px">
+      <div id="installTitle" class="label">Install Prompt Enhancer</div>
+      <div class="small muted" style="margin-bottom:8px">Install this app for quick access and offline support.</div>
+      <div class="actions">
+        <button id="installBtn" type="button">Install</button>
+        <button id="dismissInstallBtn" class="ghost" type="button">Not now</button>
+      </div>
+    </section>
+
+    <div class="footer">
+      Built with the OpenRouter Chat Completions API (SSE streaming supported). Be kind to rate limits.
+    </div>
+  </main>
+
+  <script>
+    'use strict';
+    const els = {
+      apiKey: document.getElementById('apiKey'),
+      saveKeyBtn: document.getElementById('saveKeyBtn'),
+      hideKeyBtn: document.getElementById('hideKeyBtn'),
+      model: document.getElementById('model'),
+      input: document.getElementById('input'),
+      enhanceBtn: document.getElementById('enhanceBtn'),
+      retryBtn: document.getElementById('retryBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      out: document.getElementById('out'),
+      meta: document.getElementById('meta'),
+      err: document.getElementById('err'),
+      stream: document.getElementById('stream'),
+      reasoning: document.getElementById('reasoning'),
+      proxyMode: document.getElementById('proxyMode'),
+      history: document.getElementById('history'),
+      clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+      installBanner: document.getElementById('installBanner'),
+      installBtn: document.getElementById('installBtn'),
+      dismissInstallBtn: document.getElementById('dismissInstallBtn'),
+    };
+
+    // --- Local state
+    let lastPayload = null;
+    let lastEndpoint = null;
+    let aborter = null;
+
+    // --- Helpers
+    const showError = (msg) => {
+      els.err.textContent = String(msg);
+      els.err.style.display = 'inline-flex';
+    };
+    const clearError = () => els.err.style.display = 'none';
+    const setBusy = (busy) => {
+      els.enhanceBtn.disabled = busy;
+      els.retryBtn.disabled = busy || !lastPayload;
+      if (busy) {
+        els.enhanceBtn.innerHTML = `<span class="spinner" aria-hidden="true"></span> Generating…`;
+        els.enhanceBtn.setAttribute('aria-busy', 'true');
+      } else {
+        els.enhanceBtn.textContent = `Enhance Prompt`;
+        els.enhanceBtn.removeAttribute('aria-busy');
+      }
+    };
+
+    // --- Persistence helpers
+    const persist = {
+      get(key, fallback) {
+        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+      },
+      set(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+      }
+    };
+
+    // --- Load/save key
+    (function initKey(){
+      const saved = localStorage.getItem('or_api_key') || '';
+      if (saved) els.apiKey.value = saved;
+      els.saveKeyBtn.onclick = () => {
+        localStorage.setItem('or_api_key', els.apiKey.value.trim());
+        els.saveKeyBtn.textContent = 'Saved';
+        setTimeout(()=> els.saveKeyBtn.textContent = 'Save Key', 900);
+      };
+      let hidden = false;
+      els.hideKeyBtn.onclick = () => {
+        hidden = !hidden;
+        els.apiKey.type = hidden ? 'password' : 'text';
+        els.hideKeyBtn.textContent = hidden ? 'Show' : 'Hide';
+      };
+    })();
+
+    // --- Restore saved prompt + model + toggles
+    (function initState(){
+      const savedPrompt = persist.get('pe_prompt', '');
+      if (savedPrompt) els.input.value = savedPrompt;
+      els.input.addEventListener('input', () => persist.set('pe_prompt', els.input.value));
+
+      const savedModel = persist.get('pe_model', '');
+      if (savedModel) els.model.value = savedModel;
+      els.model.addEventListener('change', () => persist.set('pe_model', els.model.value));
+
+      const savedStream = persist.get('pe_stream', true);
+      els.stream.checked = !!savedStream;
+      els.stream.addEventListener('change', () => persist.set('pe_stream', !!els.stream.checked));
+
+      const savedReason = persist.get('pe_reasoning', false);
+      els.reasoning.checked = !!savedReason;
+      els.reasoning.addEventListener('change', () => persist.set('pe_reasoning', !!els.reasoning.checked));
+
+      const savedProxy = persist.get('pe_proxy', false);
+      els.proxyMode.checked = !!savedProxy;
+      els.proxyMode.addEventListener('change', () => persist.set('pe_proxy', !!els.proxyMode.checked));
+    })();
+
+    // --- Populate models (filter "free": pricing prompt+completion both "0")
+    async function loadModels() {
+      try {
+        const key = (localStorage.getItem('or_api_key') || '').trim();
+        if (!key) return; // avoid 401 spam; we refresh after user saves
+        const res = await fetch('https://openrouter.ai/api/v1/models', {
+          headers: { 'Authorization': `Bearer ${key}` }
+        });
+        if (!res.ok) throw new Error(`Models list failed: ${res.status}`);
+        const data = await res.json();
+        const free = (data.data || []).filter(m => {
+          const p = m.pricing || {};
+          // Treat as free if both prompt & completion are 0 (strings) or missing (rare).
+          const z = (x) => x === '0' || x === 0 || x === '0.0' || x === '0.00000';
+          return z(p.prompt) && z(p.completion);
+        });
+        els.model.innerHTML = '';
+        const opts = free.length ? free : (data.data || []);
+        opts
+          // prefer chat text models
+          .filter(m => (m.architecture?.modality || '').includes('text'))
+          .slice(0, 200)
+          .sort((a,b)=> (a.name || a.id).localeCompare(b.name || b.id))
+          .forEach(m => {
+            const o = document.createElement('option');
+            o.value = m.id;
+            o.textContent = `${m.name || m.id}${(m.pricing && (m.pricing.prompt==='0' && m.pricing.completion==='0')) ? ' · FREE' : ''}`;
+            els.model.appendChild(o);
+          });
+        // restore prior selection, if any
+        const saved = persist.get('pe_model', '');
+        if (saved) els.model.value = saved;
+      } catch (e) {
+        console.error(e);
+        // Silent failure: user might have no key yet.
+      }
+    }
+    loadModels();
+    els.saveKeyBtn.addEventListener('click', loadModels);
+
+    // --- Build the enhancer system prompt
+    function enhancerSystemPrompt(){
+      return `You are a prompt enhancer. Rewrite the user's prompt to be:
+- clearer, specific, and task-focused
+- includes explicit constraints (format, tone, audience, success criteria)
+- avoids redundancy
+- keeps original intent
+Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier model.`;
+    }
+
+    // --- Compose request
+    function buildPayload(userText) {
+      const modelBase = els.model.value || 'deepseek/deepseek-chat';
+      const useOnline = !!(els.reasoning && els.reasoning.checked);
+      const model = useOnline ? `${modelBase}:online` : modelBase; // OpenRouter web search plugin
+      return {
+        model,
+        stream: !!els.stream.checked,
+        messages: [
+          { role: 'system', content: enhancerSystemPrompt() },
+          { role: 'user', content: userText }
+        ],
+        // conservative defaults; change as you like
+        temperature: 0.4,
+        top_p: 0.95,
+        max_tokens: 800
+      };
+    }
+
+    // --- Streaming via fetch + ReadableStream (SSE data: lines)
+    async function callOpenRouter(payload){
+      clearError();
+      const usingProxy = els.proxyMode.checked;
+      const endpoint = usingProxy ? '/proxy' : 'https://openrouter.ai/api/v1/chat/completions';
+      lastEndpoint = endpoint;
+
+      const headers = {
+        'Content-Type': 'application/json',
+        // Optional headers improve attribution/ranking on OpenRouter
+        'HTTP-Referer': location.origin,
+        'X-Title': 'Prompt Enhancer (Vanilla)',
+      };
+      if (payload.stream) headers['Accept'] = 'text/event-stream';
+      if (!usingProxy){
+        const key = (localStorage.getItem('or_api_key') || '').trim();
+        if (!key) throw new Error('Missing OpenRouter API key.');
+        headers['Authorization'] = `Bearer ${key}`;
+      }
+
+      aborter?.abort();
+      aborter = new AbortController();
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal: aborter.signal
+      });
+
+      if (!res.ok) {
+        let reason = '';
+        try {
+          const j = await res.json();
+          reason = j.error?.message || '';
+        } catch {
+          try { reason = (await res.text()).slice(0, 120); } catch {}
+        }
+        throw new Error(`Request failed (${res.status}). ${reason ? 'Reason: ' + reason : 'Please verify your API key, model, or proxy.'}`);
+      }
+
+      if (!payload.stream) {
+        const json = await res.json();
+        return json.choices?.[0]?.message?.content || '';
+      }
+
+      // Stream parse SSE lines: look for "data: {json}"
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let acc = '';
+      let fullText = '';
+      while (true){
+        const {done, value} = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream:true });
+        const parts = acc.split('\n\n');
+        acc = parts.pop() || '';
+        for (const p of parts){
+          // ignore comment/keepalive lines
+          const line = p.trim();
+          if (!line.startsWith('data:')) continue;
+          const data = line.slice(5).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const j = JSON.parse(data);
+            const delta = j.choices?.[0]?.delta?.content;
+            if (typeof delta === 'string') {
+              fullText += delta;
+              els.out.textContent += delta;
+            }
+          } catch { /* ignore parse blips */ }
+        }
+      }
+      return els.out.textContent;
+    }
+
+    // --- Wire UI
+    async function enhance(runFromRetry=false){
+      const text = (els.input.value || '').trim();
+      if (!text) { showError('Please enter a prompt to enhance.'); return; }
+      els.out.textContent = '';
+      els.meta.textContent = '';
+      clearError();
+      setBusy(true);
+      const payload = runFromRetry && lastPayload ? lastPayload : buildPayload(text);
+      lastPayload = payload;
+      const t0 = performance.now();
+      try {
+        const content = await callOpenRouter(payload);
+        const t1 = performance.now();
+        els.copyBtn.disabled = !content;
+        els.retryBtn.disabled = false;
+        const modelShown = payload.model;
+        els.meta.textContent = `Model: ${modelShown} · ${Math.round(t1 - t0)} ms · ${payload.stream ? 'streamed' : 'non-stream'}`;
+        addToHistory({ input: text, output: content, model: modelShown, ts: Date.now() });
+      } catch (e) {
+        // If :online fails with 404, retry without :online
+        const msg = String(e && e.message || e || '');
+        const hadOnline = (payload.model || '').includes(':online');
+        const is404 = /\b404\b/.test(msg);
+        if (hadOnline && is404) {
+          try {
+            const fallbackPayload = { ...payload, model: payload.model.replace(':online','') };
+            const content = await callOpenRouter(fallbackPayload);
+            const t1 = performance.now();
+            els.copyBtn.disabled = !content;
+            els.retryBtn.disabled = false;
+            els.meta.textContent = `Model: ${fallbackPayload.model} · ${Math.round(t1 - t0)} ms · fallback from :online`;
+            addToHistory({ input: text, output: content, model: fallbackPayload.model, ts: Date.now() });
+            return; // success via fallback
+          } catch (e2) {
+            console.error(e2);
+            showError(String(e2.message || e2));
+          }
+        } else {
+          console.error(e);
+          showError(msg);
+        }
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    els.enhanceBtn.addEventListener('click', () => enhance(false));
+    els.retryBtn.addEventListener('click', () => enhance(true));
+    els.copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(els.out.textContent);
+        els.copyBtn.textContent = 'Copied!';
+        setTimeout(()=> els.copyBtn.textContent = 'Copy', 900);
+      } catch {
+        showError('Clipboard permission blocked.');
+      }
+    });
+    els.clearBtn.addEventListener('click', () => {
+      els.input.value = ''; els.out.textContent = ''; els.meta.textContent = '';
+      clearError(); lastPayload = null; els.retryBtn.disabled = true; els.copyBtn.disabled = true;
+      persist.set('pe_prompt', '');
+    });
+
+    // Cmd/Ctrl+Enter to enhance
+    document.addEventListener('keydown', (e)=>{
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') enhance(false);
+    });
+
+    // --- History (last 5)
+    function renderHistory(){
+      const items = persist.get('pe_history', []);
+      els.history.innerHTML = '';
+      if (!items.length) {
+        const p = document.createElement('div');
+        p.className = 'small muted';
+        p.textContent = 'No history yet.';
+        els.history.appendChild(p);
+        return;
+      }
+      items.forEach((h, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'history-item';
+
+        const meta = document.createElement('div');
+        meta.className = 'small muted';
+        const dt = new Date(h.ts);
+        meta.textContent = `${h.model} · ${dt.toLocaleString()}`;
+
+        const out = document.createElement('div');
+        out.className = 'small';
+        out.style.whiteSpace = 'pre-wrap';
+        out.textContent = h.output.slice(0, 400) + (h.output.length > 400 ? '…' : '');
+
+        const actions = document.createElement('div');
+        actions.className = 'history-actions';
+
+        const insertBtn = document.createElement('button');
+        insertBtn.className = 'ghost';
+        insertBtn.type = 'button';
+        insertBtn.textContent = 'Insert Input';
+        insertBtn.addEventListener('click', () => { els.input.value = h.input; persist.set('pe_prompt', h.input); els.input.focus(); });
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'ghost';
+        copyBtn.type = 'button';
+        copyBtn.textContent = 'Copy Output';
+        copyBtn.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(h.output); } catch {}
+        });
+
+        const reuseBtn = document.createElement('button');
+        reuseBtn.type = 'button';
+        reuseBtn.textContent = 'Reuse Model';
+        reuseBtn.addEventListener('click', () => { els.model.value = h.model.replace(':online',''); persist.set('pe_model', els.model.value); });
+
+        actions.append(insertBtn, copyBtn, reuseBtn);
+        wrap.append(meta, out, actions);
+        els.history.appendChild(wrap);
+      });
+    }
+
+    function addToHistory(item){
+      const items = persist.get('pe_history', []);
+      const next = [item, ...items].slice(0, 5);
+      persist.set('pe_history', next);
+      renderHistory();
+    }
+
+    els.clearHistoryBtn.addEventListener('click', () => { persist.set('pe_history', []); renderHistory(); });
+
+    // initial render
+    renderHistory();
+
+    // --- PWA: Service Worker registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
+      });
+    }
+
+    // --- PWA: Install prompt banner
+    (function pwaInstall(){
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+      let deferredEvt = null;
+      const sessionAnswered = sessionStorage.getItem('pe_install_answered') === '1';
+
+      // Show banner immediately for eligible sessions; enable Install when event arrives
+      if (!isStandalone && !sessionAnswered) {
+        els.installBanner.style.display = 'block';
+        els.installBtn.disabled = true;
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); // use custom banner
+        deferredEvt = e;
+        if (!isStandalone && !sessionAnswered) {
+          els.installBanner.style.display = 'block';
+          els.installBtn.disabled = false;
+        }
+      });
+
+      window.addEventListener('appinstalled', () => {
+        els.installBanner.style.display = 'none';
+        sessionStorage.setItem('pe_install_answered', '1');
+      });
+
+      els.installBtn.addEventListener('click', async () => {
+        if (!deferredEvt) { return; }
+        els.installBanner.style.display = 'none';
+        deferredEvt.prompt();
+        try { await deferredEvt.userChoice; } catch {}
+        sessionStorage.setItem('pe_install_answered', '1');
+        deferredEvt = null;
+      });
+
+      els.dismissInstallBtn.addEventListener('click', () => {
+        els.installBanner.style.display = 'none';
+        sessionStorage.setItem('pe_install_answered', '1');
+      });
+    })();
+  </script>
+</body>
+</html>

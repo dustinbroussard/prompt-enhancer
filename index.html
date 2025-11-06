@@ -9,55 +9,100 @@
   <title>Prompt Enhancer · OpenRouter</title>
   <meta name="color-scheme" content="light dark" />
   <meta name="referrer" content="same-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://openrouter.ai; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://openrouter.ai https:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'">
   <meta name="theme-color" content="#1e40af" />
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
   <link rel="icon" href="./icons/icon-512.png" sizes="512x512">
   <style>
     :root{
-      --bg: canvas; --fg: canvastext; --muted: color-mix(in oklab, var(--fg) 60%, transparent);
+      --bg: canvas; 
+      --fg: canvastext; 
+      --muted: color-mix(in oklab, var(--fg) 55%, transparent);
       --card: color-mix(in oklab, var(--bg) 85%, var(--fg) 5%);
       /* darker accent to meet contrast with white text */
       --accent: #1e40af;
-      --radius: 14px;
+      --accent-2: #3b82f6;
+      --accent-3: #0ea5e9;
+      --radius: 16px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 2px 10px rgba(0,0,0,.06);
       --shadow: 0 8px 30px rgba(0,0,0,.08);
+      --shadow-lg: 0 20px 40px rgba(0,0,0,.12);
+      --ring: 2px solid var(--accent);
+      --surface-gradient: radial-gradient(1200px 600px at 0% -10%, color-mix(in oklab, var(--accent-2) 10%, transparent), transparent),
+                          radial-gradient(900px 400px at 100% 10%, color-mix(in oklab, var(--accent-3) 10%, transparent), transparent);
+    }
+    /* Light/Dark themes */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f1a;
+        --fg: #edf2f7;
+        --card: color-mix(in oklab, var(--bg) 75%, var(--fg) 7%);
+      }
+    }
+    html[data-theme="light"] {
+      --bg: #f7f9fc;
+      --fg: #0f172a;
+      --card: #ffffff;
+    }
+    html[data-theme="dark"] {
+      --bg: #0b0f1a;
+      --fg: #e5eaf1;
+      --card: #0f1626;
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      margin:0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
       background: var(--bg); color: var(--fg);
+      background-image: var(--surface-gradient);
+      background-attachment: fixed;
+      transition: background-color .3s ease, color .3s ease;
     }
     header{
-      padding: 14px; position: sticky; top: 0; backdrop-filter: blur(6px);
-      background: color-mix(in oklab, var(--bg) 80%, transparent);
+      padding: 10px 14px; position: sticky; top: 0; backdrop-filter: blur(8px);
+      background: color-mix(in oklab, var(--bg) 70%, transparent);
       border-bottom: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
       z-index: 3;
     }
-    .wrap{max-width: 920px; margin: 0 auto; padding: 14px}
+    .wrap{max-width: 980px; margin: 0 auto; padding: 14px}
     .row{display:flex; gap:10px; flex-wrap: wrap; align-items:center}
     .grow{flex:1 1 240px}
     input, select, button, textarea{
       width:100%; padding: 12px 14px; border-radius: var(--radius);
-      border: 1px solid color-mix(in oklab, var(--fg) 18%, transparent);
+      border: 1px solid color-mix(in oklab, var(--fg) 16%, transparent);
       background: var(--card); color: var(--fg);
       outline: none;
+      transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .2s ease;
     }
-    input:focus, select:focus, textarea:focus{ border-color: var(--accent) }
+    input:focus, select:focus, textarea:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent) }
     button{
-      cursor:pointer; border:none; background: var(--accent); color: white; font-weight: 600;
+      cursor:pointer; border:none; background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 90%, #000 0%), var(--accent-2)); 
+      color: white; font-weight: 600;
       box-shadow: var(--shadow);
+      transform: translateZ(0);
     }
+    button:hover{ filter: brightness(1.03); transform: translateY(-1px) }
+    button:active{ transform: translateY(0) scale(.98) }
     button.ghost{ background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); color: var(--fg) }
-    button:disabled{ opacity:.6; cursor:not-allowed }
+    button.ghost:hover{ background: color-mix(in oklab, var(--bg) 88%, var(--fg) 12%) }
+    button:disabled{ opacity:.6; cursor:not-allowed; transform: none; filter: none }
     button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
-    main{ padding-block: 10px 40px }
+    main{ padding-block: 10px 56px; animation: fadeIn .35s ease-out }
     .card{
       background: var(--card); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
-      border-radius: calc(var(--radius) + 4px); padding: 14px; box-shadow: var(--shadow);
+      border-radius: calc(var(--radius) + 4px); padding: 16px; box-shadow: var(--shadow);
+      transition: box-shadow .25s ease, transform .25s ease, background-color .3s ease, border-color .3s ease;
+    }
+    .card:hover{ box-shadow: var(--shadow-lg); transform: translateY(-1px) }
+    .header-card{
+      border-radius: var(--radius-lg);
+      background: color-mix(in oklab, var(--bg) 80%, var(--fg) 3%);
+      border: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
+      box-shadow: var(--shadow-sm);
     }
     .label{ font-size: 12px; opacity:.7; margin-bottom:6px }
     textarea{ min-height: 130px; resize: vertical }
@@ -76,7 +121,17 @@
     @keyframes spin{ to{ transform: rotate(1turn) } }
     .error{ border-color: #e33; color: #e33; background: color-mix(in oklab, #e33 10%, transparent)}
     .footer{ text-align:center; opacity:.7; font-size: 10px; margin-top: 18px }
-    .switch { display:inline-flex; gap:5px; align-items:center; }
+    .switch { display:inline-flex; gap:8px; align-items:center; padding:6px 8px; border-radius: 999px; background: color-mix(in oklab, var(--bg) 94%, var(--fg) 6%); border: 1px solid color-mix(in oklab, var(--fg) 10%, transparent) }
+    .switch input{ accent-color: var(--accent) }
+    /* Custom toggle */
+    .toggle{ display:inline-flex; align-items:center; gap:10px }
+    .toggle-label{ display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none }
+    .toggle-input{ position: absolute; opacity: 0; width:1px; height:1px; overflow:hidden }
+    .toggle-track{ position: relative; width: 42px; height: 24px; border-radius: 999px; background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent); box-shadow: inset 0 1px 2px rgba(0,0,0,.08); transition: background-color .25s ease, border-color .25s ease }
+    .toggle-thumb{ position:absolute; top: 50%; left: 3px; width: 18px; height:18px; transform: translate(0,-50%); border-radius: 50%; background: var(--card); box-shadow: var(--shadow-sm); transition: transform .25s ease }
+    .toggle-input:checked + .toggle-track{ background: color-mix(in oklab, var(--accent) 75%, var(--accent-2) 25%); border-color: transparent }
+    .toggle-input:checked + .toggle-track .toggle-thumb{ transform: translate(18px,-50%) }
+    .toggle-text{ font-size: 12px; opacity:.85 }
     @media (prefers-reduced-motion: reduce){
       .spinner{ animation: none }
     }
@@ -84,31 +139,61 @@
       display: grid; gap: 10px;
     }
     .history-item{
-      padding: 10px; border-radius: 10px;
+      padding: 12px; border-radius: var(--radius);
       background: color-mix(in oklab, var(--bg) 94%, var(--fg) 6%);
       border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      transition: background-color .25s ease, border-color .25s ease;
     }
     .history-actions{ display:flex; gap:8px; margin-top:8px; flex-wrap: wrap }
+
+    /* Top nav */
+    .nav{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px }
+    .brand-badge{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:10px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); color:white; box-shadow: var(--shadow) }
+    .brand-title{ font-size: 16px }
+    .icon-btn{ flex:0 0 auto; width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius: 12px; background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); box-shadow: var(--shadow-sm) }
+    .icon-btn:hover{ background: color-mix(in oklab, var(--bg) 88%, var(--fg) 12%) }
+
+    /* Animations */
+    @keyframes fadeIn{ from{ opacity:0; transform: translateY(6px) } to{ opacity:1; transform:none } }
+    @keyframes scaleIn{ from{ opacity:0; transform: scale(.96) } to{ opacity:1; transform: scale(1) } }
+    .reveal{ animation: scaleIn .25s ease-out }
+
+    /* Modal */
+    .backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: color-mix(in oklab, #000 30%, transparent); backdrop-filter: blur(6px); z-index: 40; animation: fadeIn .2s ease }
+    .backdrop[aria-hidden="false"]{ display:flex }
+    .modal{ width:min(560px, 92vw); background: color-mix(in oklab, var(--bg) 65%, var(--fg) 6%); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 16px; animation: scaleIn .2s ease; color: var(--fg) }
+    .modal .title{ font-weight:700; margin-bottom:8px }
+    .modal .actions{ justify-content: flex-end }
   </style>
 </head>
 <body>
   <header>
-    <div class="wrap row">
-      <div class="grow">
-        <label for="apiKey" class="label">OpenRouter API Key (stored locally)</label>
-        <div class="row" style="gap:8px">
-          <input id="apiKey" class="grow" placeholder="or-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" aria-describedby="apiKeyHelp" />
+    <div class="wrap">
+      <div class="nav">
+        <div class="brand">
+          <div class="brand-badge" aria-hidden="true">✨</div>
+          <div class="brand-title">Prompt Enhancer</div>
+        </div>
+        <button id="themeToggle" class="icon-btn" type="button" title="Toggle light/dark" aria-label="Toggle theme">🌙</button>
+      </div>
+      <div class="row header-card" style="padding:10px">
+        <div class="grow">
+          <label for="apiKey" class="label">OpenRouter API Key (stored locally)</label>
+          <div class="row" style="gap:8px">
+            <input id="apiKey" class="grow" placeholder="or-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" aria-describedby="apiKeyHelp" />
           <button id="saveKeyBtn" type="button" style="flex:0 0 auto; min-width:110px">Save Key</button>
           <button id="hideKeyBtn" class="ghost" type="button" style="flex:0 0 auto">Hide</button>
+          </div>
+          <div id="apiKeyHelp" class="small muted" style="margin-top:6px">
+            Tip: use a low-limit key or the optional proxy below to avoid exposing secrets.
+          </div>
         </div>
-        <div id="apiKeyHelp" class="small muted" style="margin-top:6px">
-          Tip: use a low-limit key or the optional proxy below to avoid exposing secrets.
+        <div style="min-width:220px" class="grow">
+          <label for="model" class="label">Model</label>
+          <select id="model" aria-describedby="modelHelp"></select>
+          <div class="small muted" style="margin-top:6px">Only models with zero pricing are shown (when available).</div>
         </div>
-      </div>
-      <div style="min-width:220px" class="grow">
-        <label for="model" class="label">Model</label>
-        <select id="model" aria-describedby="modelHelp"></select>
-        <div class="small muted" style="margin-top:6px">Only models with zero pricing are shown (when available).</div>
       </div>
     </div>
   </header>
@@ -118,18 +203,28 @@
       <label for="input" class="label">Your raw prompt</label>
       <textarea id="input" placeholder="Describe what you want. I’ll rewrite it into a crisp, structured, high-signal prompt." aria-describedby="inputHelp"></textarea>
       <div class="row" style="margin-top:10px; align-items:center;">
-        <div class="switch">
-          <input type="checkbox" id="stream" checked />
-          <label for="stream">Stream</label>
+        <div class="toggle">
+          <label class="toggle-label" for="stream">
+            <input type="checkbox" id="stream" class="toggle-input" checked />
+            <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text">Stream</span>
+          </label>
         </div>
-        <div class="switch">
-          <input type="checkbox" id="reasoning" />
-          <label for="reasoning">Web Search</label>
+        <div class="toggle">
+          <label class="toggle-label" for="reasoning">
+            <input type="checkbox" id="reasoning" class="toggle-input" />
+            <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text">Web Search</span>
+          </label>
         </div>
-        <div class="switch">
-          <input type="checkbox" id="proxyMode" />
-          <label for="proxyMode">Use Proxy</label>
+        <div class="toggle">
+          <label class="toggle-label" for="proxyMode">
+            <input type="checkbox" id="proxyMode" class="toggle-input" />
+            <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text">Use Proxy</span>
+          </label>
         </div>
+        <button id="proxyConfigBtn" class="ghost" type="button" style="flex:0 0 auto">Configure</button>
         <span class="right small muted">Latency depends on model + internet.</span>
       </div>
       <div class="actions" style="margin-top:10px">
@@ -169,6 +264,20 @@
     </div>
   </main>
 
+  <!-- Proxy Settings Modal -->
+  <div id="proxyModal" class="backdrop" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="proxyModalTitle">
+    <div class="modal" role="document">
+      <div class="title" id="proxyModalTitle">Proxy Settings</div>
+      <div class="small muted" style="margin-bottom:10px">Use a deployed Cloudflare Worker (or compatible) with env <code>OPENROUTER_API_KEY</code>. The endpoint must allow CORS.</div>
+      <label for="proxyUrl" class="label">Proxy endpoint URL</label>
+      <input id="proxyUrl" placeholder="/proxy or https://your.domain/proxy" autocomplete="off" />
+      <div class="actions" style="margin-top:12px">
+        <button id="proxySaveBtn" type="button">Save</button>
+        <button id="proxyCancelBtn" class="ghost" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     'use strict';
     const els = {
@@ -192,6 +301,12 @@
       installBanner: document.getElementById('installBanner'),
       installBtn: document.getElementById('installBtn'),
       dismissInstallBtn: document.getElementById('dismissInstallBtn'),
+      themeToggle: document.getElementById('themeToggle'),
+      proxyConfigBtn: document.getElementById('proxyConfigBtn'),
+      proxyModal: document.getElementById('proxyModal'),
+      proxyUrl: document.getElementById('proxyUrl'),
+      proxySaveBtn: document.getElementById('proxySaveBtn'),
+      proxyCancelBtn: document.getElementById('proxyCancelBtn'),
     };
 
     // --- Local state
@@ -265,6 +380,40 @@
       const savedProxy = persist.get('pe_proxy', false);
       els.proxyMode.checked = !!savedProxy;
       els.proxyMode.addEventListener('change', () => persist.set('pe_proxy', !!els.proxyMode.checked));
+
+      // Theme: light/dark with persistence
+      const savedTheme = persist.get('pe_theme', null);
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', initialTheme);
+      els.themeToggle.textContent = initialTheme === 'dark' ? '🌞' : '🌙';
+      els.themeToggle.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        persist.set('pe_theme', next);
+        els.themeToggle.textContent = next === 'dark' ? '🌞' : '🌙';
+      });
+
+      // Proxy URL persistence + modal wiring
+      const savedProxyUrl = persist.get('pe_proxy_url', '/proxy');
+      if (els.proxyUrl) els.proxyUrl.value = savedProxyUrl;
+      function openProxyModal(){
+        els.proxyModal?.setAttribute('aria-hidden', 'false');
+        setTimeout(()=> els.proxyUrl?.focus(), 0);
+      }
+      function closeProxyModal(){
+        els.proxyModal?.setAttribute('aria-hidden', 'true');
+      }
+      els.proxyConfigBtn?.addEventListener('click', openProxyModal);
+      els.proxyCancelBtn?.addEventListener('click', closeProxyModal);
+      els.proxySaveBtn?.addEventListener('click', () => {
+        const url = (els.proxyUrl?.value || '').trim() || '/proxy';
+        persist.set('pe_proxy_url', url);
+        closeProxyModal();
+      });
+      els.proxyModal?.addEventListener('click', (e) => { if (e.target === els.proxyModal) closeProxyModal(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProxyModal(); });
     })();
 
     // --- Populate models (filter "free": pricing prompt+completion both "0")
@@ -340,7 +489,8 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
     async function callOpenRouter(payload){
       clearError();
       const usingProxy = els.proxyMode.checked;
-      const endpoint = usingProxy ? '/proxy' : 'https://openrouter.ai/api/v1/chat/completions';
+      const configuredProxy = persist.get('pe_proxy_url', '/proxy');
+      const endpoint = usingProxy ? configuredProxy : 'https://openrouter.ai/api/v1/chat/completions';
       lastEndpoint = endpoint;
 
       const headers = {
@@ -561,6 +711,7 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
       // Show banner immediately for eligible sessions; enable Install when event arrives
       if (!isStandalone && !sessionAnswered) {
         els.installBanner.style.display = 'block';
+        els.installBanner.classList.add('reveal');
         els.installBtn.disabled = true;
       }
 
@@ -569,12 +720,14 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
         deferredEvt = e;
         if (!isStandalone && !sessionAnswered) {
           els.installBanner.style.display = 'block';
+          els.installBanner.classList.add('reveal');
           els.installBtn.disabled = false;
         }
       });
 
       window.addEventListener('appinstalled', () => {
         els.installBanner.style.display = 'none';
+        els.installBanner.classList.remove('reveal');
         sessionStorage.setItem('pe_install_answered', '1');
       });
 
@@ -589,6 +742,7 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
 
       els.dismissInstallBtn.addEventListener('click', () => {
         els.installBanner.style.display = 'none';
+        els.installBanner.classList.remove('reveal');
         sessionStorage.setItem('pe_install_answered', '1');
       });
     })();

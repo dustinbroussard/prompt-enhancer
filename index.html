@@ -14,46 +14,57 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
   <link rel="icon" href="./icons/icon-512.png" sizes="512x512">
-  <style>
+<style>
     :root{
-      --bg: canvas; 
-      --fg: canvastext; 
-      --muted: color-mix(in oklab, var(--fg) 55%, transparent);
-      --card: color-mix(in oklab, var(--bg) 85%, var(--fg) 5%);
-      /* darker accent to meet contrast with white text */
-      --accent: #1e40af;
-      --accent-2: #3b82f6;
-      --accent-3: #0ea5e9;
+      --bg: #ffffff;
+      --fg: #000000;
+      --muted: #666666;
+      --card: #f5f5f5;
+      --accent: #000000;
+      --accent-2: #1a1a1a;
+      --accent-3: #111111;
       --radius: 16px;
       --radius-lg: 20px;
-      --shadow-sm: 0 2px 10px rgba(0,0,0,.06);
-      --shadow: 0 8px 30px rgba(0,0,0,.08);
-      --shadow-lg: 0 20px 40px rgba(0,0,0,.12);
-      --ring: 2px solid var(--accent);
-      --surface-gradient: radial-gradient(1200px 600px at 0% -10%, color-mix(in oklab, var(--accent-2) 10%, transparent), transparent),
-                          radial-gradient(900px 400px at 100% 10%, color-mix(in oklab, var(--accent-3) 10%, transparent), transparent);
-    }
-    /* Light/Dark themes */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0b0f1a;
-        --fg: #edf2f7;
-        --card: color-mix(in oklab, var(--bg) 75%, var(--fg) 7%);
-      }
+      --shadow-sm: 0 2px 10px rgba(0,0,0,.05);
+      --shadow: 0 8px 30px rgba(0,0,0,.1);
+      --shadow-lg: 0 20px 40px rgba(0,0,0,.15);
+      --surface-gradient: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+      --border: #cccccc;
+      --border-strong: #d0d0d0;
     }
     html[data-theme="light"] {
-      --bg: #f7f9fc;
-      --fg: #0f172a;
-      --card: #ffffff;
+      --bg: #ffffff;
+      --fg: #000000;
+      --muted: #666666;
+      --card: #f5f5f5;
+      --accent: #000000;
+      --accent-2: #1a1a1a;
+      --accent-3: #111111;
+      --surface-gradient: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+      --border: #cccccc;
+      --border-strong: #d0d0d0;
+      --shadow-sm: 0 2px 10px rgba(0,0,0,.05);
+      --shadow: 0 8px 30px rgba(0,0,0,.1);
+      --shadow-lg: 0 20px 40px rgba(0,0,0,.15);
     }
     html[data-theme="dark"] {
-      --bg: #0b0f1a;
-      --fg: #e5eaf1;
-      --card: #0f1626;
+      --bg: #000000;
+      --fg: #ffffff;
+      --muted: #888888;
+      --card: #1a1a1a;
+      --accent: #ffffff;
+      --accent-2: #e0e0e0;
+      --accent-3: #f0f0f0;
+      --surface-gradient: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+      --border: #333333;
+      --border-strong: #2a2a2a;
+      --shadow-sm: 0 2px 10px rgba(255,255,255,.05);
+      --shadow: 0 8px 30px rgba(255,255,255,.1);
+      --shadow-lg: 0 20px 40px rgba(255,255,255,.15);
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      margin:0; font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg); color: var(--fg);
       background-image: var(--surface-gradient);
       background-attachment: fixed;
@@ -61,30 +72,30 @@
     }
     header{
       padding: 10px 14px; position: sticky; top: 0; backdrop-filter: blur(8px);
-      background: color-mix(in oklab, var(--bg) 70%, transparent);
-      border-bottom: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      background: color-mix(in oklab, var(--bg) 85%, var(--fg) 5%);
+      border-bottom: 1px solid var(--border);
       z-index: 3;
     }
-    .wrap{max-width: 980px; margin: 0 auto; padding: 14px}
+    .wrap{max-width: 1024px; margin: 0 auto; padding: 14px; width:100%}
     .row{display:flex; gap:10px; flex-wrap: wrap; align-items:center}
-    .grow{flex:1 1 240px}
+    .grow{flex:1 1 220px}
     input, select, button, textarea{
       width:100%; padding: 12px 14px; border-radius: var(--radius);
-      border: 1px solid color-mix(in oklab, var(--fg) 16%, transparent);
+      border: 1px solid var(--border);
       background: var(--card); color: var(--fg);
-      outline: none;
+      outline: none; min-height: 44px;
       transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .2s ease;
     }
     input:focus, select:focus, textarea:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent) }
     button{
-      cursor:pointer; border:none; background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 90%, #000 0%), var(--accent-2)); 
-      color: white; font-weight: 600;
+      cursor:pointer; border:none; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: var(--bg); font-weight: 700; letter-spacing: .2px;
       box-shadow: var(--shadow);
       transform: translateZ(0);
     }
-    button:hover{ filter: brightness(1.03); transform: translateY(-1px) }
+    button:hover{ filter: brightness(1.05); transform: translateY(-1px) }
     button:active{ transform: translateY(0) scale(.98) }
-    button.ghost{ background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); color: var(--fg) }
+    button.ghost{ background: var(--bg); color: var(--fg); border: 1px solid var(--border) }
     button.ghost:hover{ background: color-mix(in oklab, var(--bg) 88%, var(--fg) 12%) }
     button:disabled{ opacity:.6; cursor:not-allowed; transform: none; filter: none }
     button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
@@ -93,19 +104,19 @@
     }
     main{ padding-block: 10px 56px; animation: fadeIn .35s ease-out }
     .card{
-      background: var(--card); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      background: var(--card); border: 1px solid var(--border);
       border-radius: calc(var(--radius) + 4px); padding: 16px; box-shadow: var(--shadow);
       transition: box-shadow .25s ease, transform .25s ease, background-color .3s ease, border-color .3s ease;
     }
     .card:hover{ box-shadow: var(--shadow-lg); transform: translateY(-1px) }
     .header-card{
       border-radius: var(--radius-lg);
-      background: color-mix(in oklab, var(--bg) 80%, var(--fg) 3%);
-      border: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
+      background: color-mix(in oklab, var(--bg) 90%, var(--accent) 4%);
+      border: 1px solid var(--border);
       box-shadow: var(--shadow-sm);
     }
-    .label{ font-size: 12px; opacity:.7; margin-bottom:6px }
-    textarea{ min-height: 130px; resize: vertical }
+    .label{ font-size: 12px; opacity:.7; margin-bottom:6px; text-transform: uppercase; letter-spacing: .3px }
+    textarea{ min-height: 140px; resize: vertical }
     .out{
       min-height: 160px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
@@ -115,56 +126,80 @@
     .right{ margin-left:auto }
     .pill{
       display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px;
-      background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      background: color-mix(in oklab, var(--bg) 88%, var(--fg) 12%); border: 1px solid var(--border);
     }
     .spinner{ width:14px; height:14px; border-radius:50%; border:2px solid currentColor; border-right-color: transparent; animation:spin 0.8s linear infinite }
     @keyframes spin{ to{ transform: rotate(1turn) } }
     .error{ border-color: #e33; color: #e33; background: color-mix(in oklab, #e33 10%, transparent)}
-    .footer{ text-align:center; opacity:.7; font-size: 10px; margin-top: 18px }
+    .footer{ text-align:center; opacity:.7; font-size: 11px; margin-top: 18px }
     .switch { display:inline-flex; gap:8px; align-items:center; padding:6px 8px; border-radius: 999px; background: color-mix(in oklab, var(--bg) 94%, var(--fg) 6%); border: 1px solid color-mix(in oklab, var(--fg) 10%, transparent) }
     .switch input{ accent-color: var(--accent) }
-    /* Custom toggle */
     .toggle{ display:inline-flex; align-items:center; gap:10px }
     .toggle-label{ display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none }
     .toggle-input{ position: absolute; opacity: 0; width:1px; height:1px; overflow:hidden }
-    .toggle-track{ position: relative; width: 42px; height: 24px; border-radius: 999px; background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent); box-shadow: inset 0 1px 2px rgba(0,0,0,.08); transition: background-color .25s ease, border-color .25s ease }
-    .toggle-thumb{ position:absolute; top: 50%; left: 3px; width: 18px; height:18px; transform: translate(0,-50%); border-radius: 50%; background: var(--card); box-shadow: var(--shadow-sm); transition: transform .25s ease }
+    .toggle-track{ position: relative; width: 48px; height: 26px; border-radius: 999px; background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent); box-shadow: inset 0 1px 2px rgba(0,0,0,.08); transition: background-color .25s ease, border-color .25s ease }
+    .toggle-thumb{ position:absolute; top: 50%; left: 4px; width: 18px; height:18px; transform: translate(0,-50%); border-radius: 50%; background: var(--card); box-shadow: var(--shadow-sm); transition: transform .25s ease }
     .toggle-input:checked + .toggle-track{ background: color-mix(in oklab, var(--accent) 75%, var(--accent-2) 25%); border-color: transparent }
-    .toggle-input:checked + .toggle-track .toggle-thumb{ transform: translate(18px,-50%) }
+    .toggle-input:checked + .toggle-track .toggle-thumb{ transform: translate(20px,-50%) }
     .toggle-text{ font-size: 12px; opacity:.85 }
     @media (prefers-reduced-motion: reduce){
       .spinner{ animation: none }
+      *{scroll-behavior:auto}
     }
     .history{
       display: grid; gap: 10px;
     }
     .history-item{
       padding: 12px; border-radius: var(--radius);
-      background: color-mix(in oklab, var(--bg) 94%, var(--fg) 6%);
-      border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      background: color-mix(in oklab, var(--bg) 88%, var(--fg) 12%);
+      border: 1px solid var(--border);
       transition: background-color .25s ease, border-color .25s ease;
     }
     .history-actions{ display:flex; gap:8px; margin-top:8px; flex-wrap: wrap }
-
-    /* Top nav */
     .nav{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px }
     .brand{ display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px }
-    .brand-badge{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:10px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); color:white; box-shadow: var(--shadow) }
-    .brand-title{ font-size: 16px }
-    .icon-btn{ flex:0 0 auto; width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius: 12px; background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); box-shadow: var(--shadow-sm) }
-    .icon-btn:hover{ background: color-mix(in oklab, var(--bg) 88%, var(--fg) 12%) }
-
-    /* Animations */
+    .brand-badge{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:12px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); color:#000; box-shadow: var(--shadow) }
+    .brand-title{ font-size: 18px }
+    .icon-btn{ flex:0 0 auto; width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius: 12px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-sm) }
+    .icon-btn:hover{ background: color-mix(in oklab, var(--card) 92%, var(--fg) 8%) }
     @keyframes fadeIn{ from{ opacity:0; transform: translateY(6px) } to{ opacity:1; transform:none } }
     @keyframes scaleIn{ from{ opacity:0; transform: scale(.96) } to{ opacity:1; transform: scale(1) } }
     .reveal{ animation: scaleIn .25s ease-out }
-
-    /* Modal */
     .backdrop{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: color-mix(in oklab, #000 30%, transparent); backdrop-filter: blur(6px); z-index: 40; animation: fadeIn .2s ease }
     .backdrop[aria-hidden="false"]{ display:flex }
     .modal{ width:min(560px, 92vw); background: color-mix(in oklab, var(--bg) 65%, var(--fg) 6%); border: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 16px; animation: scaleIn .2s ease; color: var(--fg) }
     .modal .title{ font-weight:700; margin-bottom:8px }
     .modal .actions{ justify-content: flex-end }
+    .status-pill{
+      position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius: 999px;
+      background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      z-index: 30;
+    }
+    .dot{ width:10px; height:10px; border-radius:50%; background: var(--muted); box-shadow: 0 0 0 4px color-mix(in oklab, var(--bg) 90%, transparent) }
+    .dot.online{ background: #22c55e }
+    .dot.offline{ background: #f87171 }
+    .insights{ display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .stat{
+      padding: 12px; border-radius: var(--radius); background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%);
+      border: 1px solid var(--border);
+    }
+    .meter{ height: 10px; background: color-mix(in oklab, var(--bg) 88%, var(--fg) 12%); border-radius: 999px; overflow:hidden; margin-top:6px }
+    .meter > span{ display:block; height:100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); width:0; transition: width .25s ease }
+    .preset-grid{ display:grid; gap:8px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .preset-card{ padding:12px; border-radius: var(--radius); border: 1px solid var(--border); background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); display:flex; flex-direction:column; gap:6px; min-height:120px }
+    .preset-card button{ width:auto }
+    .chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); border: 1px solid var(--border); font-size:12px }
+    .toolbar{ display:flex; gap:10px; flex-wrap: wrap; align-items:center }
+    .tagline{ font-size:13px; opacity:.85 }
+    .banner{ border-radius: var(--radius); padding: 14px; background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); border: 1px solid var(--border); display:flex; gap:10px; align-items:flex-start }
+    .floating{ position:sticky; bottom:14px }
+    @media (max-width: 600px){
+      .nav{ flex-direction: column; align-items: flex-start }
+      header{ position: sticky; }
+    }
   </style>
 </head>
 <body>
@@ -175,7 +210,10 @@
           <div class="brand-badge" aria-hidden="true">✨</div>
           <div class="brand-title">Prompt Enhancer</div>
         </div>
-        <button id="themeToggle" class="icon-btn" type="button" title="Toggle light/dark" aria-label="Toggle theme">🌙</button>
+        <div class="toolbar">
+          <div class="tagline muted">Framework-free, offline-first prompt workstation.</div>
+          <button id="themeToggle" class="icon-btn" type="button" title="Toggle light/dark" aria-label="Toggle theme">🌙</button>
+        </div>
       </div>
       <div class="row header-card" style="padding:10px">
         <div class="grow">
@@ -233,6 +271,13 @@
         <button id="copyBtn" class="ghost" type="button" disabled>Copy</button>
         <button id="clearBtn" class="ghost" type="button">Clear</button>
       </div>
+      <div class="banner" style="margin-top:10px">
+        <div class="chip" aria-hidden="true">Insight</div>
+        <div>
+          <div class="small muted" id="inputHelp">Best results: spell out audience, success criteria, constraints, format, and tone. Ask for 2-3 variants when unsure.</div>
+          <ul class="small muted" id="qualitySuggestions" style="margin:6px 0 0 0; padding-left:16px"></ul>
+        </div>
+      </div>
     </section>
 
     <section class="card">
@@ -240,6 +285,20 @@
       <div id="out" class="out" role="region" aria-live="polite" aria-label="Enhanced prompt output"></div>
       <div id="meta" class="small muted" style="margin-top:10px" role="status" aria-live="polite"></div>
       <div id="err" class="small error pill" role="alert" style="display:none; margin-top:10px"></div>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <div class="row" style="align-items:flex-start; gap:14px">
+        <div class="grow">
+          <div class="label">Prompt insights</div>
+          <div class="insights" id="insightsPanel" aria-live="polite"></div>
+        </div>
+        <div class="grow">
+          <div class="label">Preset library</div>
+          <input id="presetSearch" placeholder="Search presets (e.g. outline, research, QA)" type="search" aria-label="Search prompt presets" />
+          <div class="preset-grid" id="presetGrid" role="list" aria-live="polite" style="margin-top:10px"></div>
+        </div>
+      </div>
     </section>
 
     <section class="card" aria-labelledby="historyTitle" style="margin-top:14px">
@@ -256,6 +315,16 @@
       <div class="actions">
         <button id="installBtn" type="button">Install</button>
         <button id="dismissInstallBtn" class="ghost" type="button">Not now</button>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <div class="label">Backup & Restore</div>
+      <div class="small muted" style="margin-bottom:8px">Export your input/history/settings to a JSON file for safekeeping or import on another device. Everything stays local.</div>
+      <div class="actions">
+        <button id="exportBtn" type="button">Export Session</button>
+        <button id="importBtn" class="ghost" type="button">Import Session</button>
+        <input id="importFile" type="file" accept="application/json" aria-hidden="true" style="position:absolute; height:1px; width:1px; opacity:0; pointer-events:none" />
       </div>
     </section>
 
@@ -277,9 +346,12 @@
       </div>
     </div>
   </div>
+  <div id="networkPill" class="status-pill" role="status" aria-live="polite" hidden>
+    <span class="dot" id="networkDot" aria-hidden="true"></span>
+    <span id="networkLabel">Offline</span>
+  </div>
 
-  <script>
-    'use strict';
+  <script type="module">
     const els = {
       apiKey: document.getElementById('apiKey'),
       saveKeyBtn: document.getElementById('saveKeyBtn'),
@@ -307,32 +379,18 @@
       proxyUrl: document.getElementById('proxyUrl'),
       proxySaveBtn: document.getElementById('proxySaveBtn'),
       proxyCancelBtn: document.getElementById('proxyCancelBtn'),
+      insightsPanel: document.getElementById('insightsPanel'),
+      qualitySuggestions: document.getElementById('qualitySuggestions'),
+      presetGrid: document.getElementById('presetGrid'),
+      presetSearch: document.getElementById('presetSearch'),
+      exportBtn: document.getElementById('exportBtn'),
+      importBtn: document.getElementById('importBtn'),
+      importFile: document.getElementById('importFile'),
+      networkPill: document.getElementById('networkPill'),
+      networkDot: document.getElementById('networkDot'),
+      networkLabel: document.getElementById('networkLabel'),
     };
 
-    // --- Local state
-    let lastPayload = null;
-    let lastEndpoint = null;
-    let aborter = null;
-
-    // --- Helpers
-    const showError = (msg) => {
-      els.err.textContent = String(msg);
-      els.err.style.display = 'inline-flex';
-    };
-    const clearError = () => els.err.style.display = 'none';
-    const setBusy = (busy) => {
-      els.enhanceBtn.disabled = busy;
-      els.retryBtn.disabled = busy || !lastPayload;
-      if (busy) {
-        els.enhanceBtn.innerHTML = `<span class="spinner" aria-hidden="true"></span> Generating…`;
-        els.enhanceBtn.setAttribute('aria-busy', 'true');
-      } else {
-        els.enhanceBtn.textContent = `Enhance Prompt`;
-        els.enhanceBtn.removeAttribute('aria-busy');
-      }
-    };
-
-    // --- Persistence helpers
     const persist = {
       get(key, fallback) {
         try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -342,297 +400,232 @@
       }
     };
 
-    // --- Load/save key
-    (function initKey(){
-      const saved = localStorage.getItem('or_api_key') || '';
-      if (saved) els.apiKey.value = saved;
-      els.saveKeyBtn.onclick = () => {
-        localStorage.setItem('or_api_key', els.apiKey.value.trim());
-        els.saveKeyBtn.textContent = 'Saved';
-        setTimeout(()=> els.saveKeyBtn.textContent = 'Save Key', 900);
+    const clone = (value) => (typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value)));
+    const createStore = (initialState) => {
+      let state = clone(initialState);
+      const subs = new Set();
+      return {
+        getState: () => state,
+        setState(updater) {
+          const next = typeof updater === 'function' ? updater(state) : { ...state, ...updater };
+          state = next;
+          subs.forEach((fn) => fn(state));
+        },
+        subscribe(fn) {
+          subs.add(fn);
+          fn(state);
+          return () => subs.delete(fn);
+        }
       };
-      let hidden = false;
-      els.hideKeyBtn.onclick = () => {
-        hidden = !hidden;
-        els.apiKey.type = hidden ? 'password' : 'text';
-        els.hideKeyBtn.textContent = hidden ? 'Show' : 'Hide';
+    };
+
+    const presets = [
+      {
+        title: 'Executive summary + action items',
+        tag: 'outline',
+        body: `Rewrite as an executive summary with a 3-bullet overview, numbered action plan, risks, and owners. Keep it concise but specific.`,
+      },
+      {
+        title: 'Product discovery brief',
+        tag: 'research',
+        body: `Turn this into a discovery brief: problem statement, target audience, success criteria, assumptions, research plan, and measurable deliverables.`,
+      },
+      {
+        title: 'QA + edge cases',
+        tag: 'qa',
+        body: `Transform into a QA plan. Include acceptance criteria, edge cases, failure handling, test data, and observability hooks.`,
+      },
+      {
+        title: 'Teaching prompt',
+        tag: 'education',
+        body: `Refine into a stepwise teaching plan with scaffolding, examples, checks for understanding, and a concise recap.`,
+      },
+      {
+        title: 'Table or JSON response',
+        tag: 'format',
+        body: `Rewrite to request a JSON object with schema, a Markdown table preview, and validation instructions. Include units and ordering.`,
+      }
+    ];
+
+    const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+
+    const analyzePrompt = (text) => {
+      const trimmed = text.trim();
+      const words = trimmed ? trimmed.split(/\s+/).length : 0;
+      const sentences = trimmed ? trimmed.split(/[.!?]+/).filter(Boolean).length : 0;
+      const questions = (trimmed.match(/\?/g) || []).length;
+      const verbs = (trimmed.match(/\b(create|build|write|design|summarize|improve|test|plan|audit|review)\b/gi) || []).length;
+      const hasAudience = /\b(user|customer|reader|student|client|team|audience)\b/i.test(trimmed);
+      const hasFormat = /(json|table|outline|steps|bullets|markdown|csv)/i.test(trimmed);
+      const hasSuccess = /(success|measure|criteria|done|acceptance|definition of done)/i.test(trimmed);
+      const hasTone = /(tone|voice|style|brand)/i.test(trimmed);
+      const scoreBase = 40 + Math.min(words, 240) * 0.1 + verbs * 2;
+      const scoreBonus = (hasAudience + hasFormat + hasSuccess + hasTone) * 8 + (questions ? 4 : 0);
+      const scorePenalty = words < 12 ? 12 : 0;
+      const score = clamp(scoreBase + scoreBonus - scorePenalty, 5, 100);
+      const warnings = [];
+      if (!hasAudience) warnings.push('Specify the audience or consumer of the output.');
+      if (!hasFormat) warnings.push('Outline the expected format (JSON/table/bullets).');
+      if (!hasSuccess) warnings.push('List success criteria or definition of done.');
+      if (words > 320) warnings.push('Trim or split into smaller asks for faster responses.');
+      if (words < 12) warnings.push('Add more context so the model can disambiguate.');
+      return {
+        words,
+        sentences,
+        questions,
+        verbs,
+        score: Math.round(score),
+        warnings,
+        readingTime: Math.max(1, Math.ceil(words / 180)),
       };
+    };
+
+    const initialTheme = (() => {
+      const saved = persist.get('pe_theme', null);
+      if (saved) return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     })();
 
-    // --- Restore saved prompt + model + toggles
-    (function initState(){
-      const savedPrompt = persist.get('pe_prompt', '');
-      if (savedPrompt) els.input.value = savedPrompt;
-      els.input.addEventListener('input', () => persist.set('pe_prompt', els.input.value));
+    const initialState = {
+      prompt: persist.get('pe_prompt', ''),
+      output: '',
+      meta: '',
+      error: '',
+      model: persist.get('pe_model', ''),
+      stream: persist.get('pe_stream', true),
+      reasoning: persist.get('pe_reasoning', false),
+      proxyMode: persist.get('pe_proxy', false),
+      proxyUrl: persist.get('pe_proxy_url', '/proxy'),
+      history: persist.get('pe_history', []),
+      busy: false,
+      lastPayload: null,
+      online: navigator.onLine,
+      theme: initialTheme,
+      stats: analyzePrompt(persist.get('pe_prompt', '')),
+      installDismissed: sessionStorage.getItem('pe_install_answered') === '1',
+      installReady: false,
+      installEvent: null,
+    };
 
-      const savedModel = persist.get('pe_model', '');
-      if (savedModel) els.model.value = savedModel;
-      els.model.addEventListener('change', () => persist.set('pe_model', els.model.value));
+    const store = createStore(initialState);
 
-      const savedStream = persist.get('pe_stream', true);
-      els.stream.checked = !!savedStream;
-      els.stream.addEventListener('change', () => persist.set('pe_stream', !!els.stream.checked));
+    const setTheme = (theme) => {
+      document.documentElement.setAttribute('data-theme', theme);
+      els.themeToggle.textContent = theme === 'dark' ? '🌞' : '🌙';
+      persist.set('pe_theme', theme);
+      store.setState({ theme });
+    };
+    setTheme(initialState.theme);
 
-      const savedReason = persist.get('pe_reasoning', false);
-      els.reasoning.checked = !!savedReason;
-      els.reasoning.addEventListener('change', () => persist.set('pe_reasoning', !!els.reasoning.checked));
+    const showError = (msg) => {
+      els.err.textContent = String(msg);
+      els.err.style.display = 'inline-flex';
+    };
+    const clearError = () => { els.err.style.display = 'none'; };
 
-      const savedProxy = persist.get('pe_proxy', false);
-      els.proxyMode.checked = !!savedProxy;
-      els.proxyMode.addEventListener('change', () => persist.set('pe_proxy', !!els.proxyMode.checked));
-
-      // Theme: light/dark with persistence
-      const savedTheme = persist.get('pe_theme', null);
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', initialTheme);
-      els.themeToggle.textContent = initialTheme === 'dark' ? '🌞' : '🌙';
-      els.themeToggle.addEventListener('click', () => {
-        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        const next = cur === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        persist.set('pe_theme', next);
-        els.themeToggle.textContent = next === 'dark' ? '🌞' : '🌙';
-      });
-
-      // Proxy URL persistence + modal wiring
-      const savedProxyUrl = persist.get('pe_proxy_url', '/proxy');
-      if (els.proxyUrl) els.proxyUrl.value = savedProxyUrl;
-      function openProxyModal(){
-        els.proxyModal?.setAttribute('aria-hidden', 'false');
-        setTimeout(()=> els.proxyUrl?.focus(), 0);
+    // --- Service helpers
+    class OpenRouterClient {
+      constructor() {
+        this.aborter = null;
       }
-      function closeProxyModal(){
-        els.proxyModal?.setAttribute('aria-hidden', 'true');
-      }
-      els.proxyConfigBtn?.addEventListener('click', openProxyModal);
-      els.proxyCancelBtn?.addEventListener('click', closeProxyModal);
-      els.proxySaveBtn?.addEventListener('click', () => {
-        const url = (els.proxyUrl?.value || '').trim() || '/proxy';
-        persist.set('pe_proxy_url', url);
-        closeProxyModal();
-      });
-      els.proxyModal?.addEventListener('click', (e) => { if (e.target === els.proxyModal) closeProxyModal(); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProxyModal(); });
-    })();
+      abort() { this.aborter?.abort(); }
+      async request(payload, opts) {
+        const { usingProxy, proxyUrl, onChunk } = opts;
+        const endpoint = usingProxy ? proxyUrl : 'https://openrouter.ai/api/v1/chat/completions';
+        const headers = {
+          'Content-Type': 'application/json',
+          'HTTP-Referer': location.origin,
+          'X-Title': 'Prompt Enhancer (Vanilla)',
+        };
+        if (payload.stream) headers['Accept'] = 'text/event-stream';
+        if (!usingProxy) {
+          const key = (localStorage.getItem('or_api_key') || '').trim();
+          if (!key) throw new Error('Missing OpenRouter API key.');
+          headers['Authorization'] = `Bearer ${key}`;
+        }
 
-    // --- Populate models (filter "free": pricing prompt+completion both "0")
-    async function loadModels() {
-      try {
-        const key = (localStorage.getItem('or_api_key') || '').trim();
-        if (!key) return; // avoid 401 spam; we refresh after user saves
-        const res = await fetch('https://openrouter.ai/api/v1/models', {
-          headers: { 'Authorization': `Bearer ${key}` }
+        this.aborter?.abort();
+        this.aborter = new AbortController();
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+          signal: this.aborter.signal
         });
-        if (!res.ok) throw new Error(`Models list failed: ${res.status}`);
-        const data = await res.json();
-        const free = (data.data || []).filter(m => {
-          const p = m.pricing || {};
-          // Treat as free if both prompt & completion are 0 (strings) or missing (rare).
-          const z = (x) => x === '0' || x === 0 || x === '0.0' || x === '0.00000';
-          return z(p.prompt) && z(p.completion);
-        });
-        els.model.innerHTML = '';
-        const opts = free.length ? free : (data.data || []);
-        opts
-          // prefer chat text models
-          .filter(m => (m.architecture?.modality || '').includes('text'))
-          .slice(0, 200)
-          .sort((a,b)=> (a.name || a.id).localeCompare(b.name || b.id))
-          .forEach(m => {
-            const o = document.createElement('option');
-            o.value = m.id;
-            o.textContent = `${m.name || m.id}${(m.pricing && (m.pricing.prompt==='0' && m.pricing.completion==='0')) ? ' · FREE' : ''}`;
-            els.model.appendChild(o);
-          });
-        // restore prior selection, if any
-        const saved = persist.get('pe_model', '');
-        if (saved) els.model.value = saved;
-      } catch (e) {
-        console.error(e);
-        // Silent failure: user might have no key yet.
+
+        if (!res.ok) {
+          let reason = '';
+          try {
+            const j = await res.json();
+            reason = j.error?.message || '';
+          } catch {
+            try { reason = (await res.text()).slice(0, 120); } catch {}
+          }
+          throw new Error(`Request failed (${res.status}). ${reason ? 'Reason: ' + reason : 'Check API key, model, or proxy.'}`);
+        }
+
+        if (!payload.stream) {
+          const json = await res.json();
+          return json.choices?.[0]?.message?.content || '';
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let acc = '';
+        let fullText = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          acc += decoder.decode(value, { stream: true });
+          const parts = acc.split('\n\n');
+          acc = parts.pop() || '';
+          for (const p of parts) {
+            const line = p.trim();
+            if (!line.startsWith('data:')) continue;
+            const data = line.slice(5).trim();
+            if (data === '[DONE]') continue;
+            try {
+              const j = JSON.parse(data);
+              const delta = j.choices?.[0]?.delta?.content;
+              if (typeof delta === 'string') {
+                fullText += delta;
+                onChunk?.(delta);
+              }
+            } catch { /* ignore parse blips */ }
+          }
+        }
+        return fullText;
       }
     }
-    loadModels();
-    els.saveKeyBtn.addEventListener('click', loadModels);
 
-    // --- Build the enhancer system prompt
-    function enhancerSystemPrompt(){
-      return `You are a prompt enhancer. Rewrite the user's prompt to be:
-- clearer, specific, and task-focused
-- includes explicit constraints (format, tone, audience, success criteria)
-- avoids redundancy
-- keeps original intent
-Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier model.`;
-    }
+    const client = new OpenRouterClient();
 
-    // --- Compose request
-    function buildPayload(userText) {
-      const modelBase = els.model.value || 'deepseek/deepseek-chat';
-      const useOnline = !!(els.reasoning && els.reasoning.checked);
-      const model = useOnline ? `${modelBase}:online` : modelBase; // OpenRouter web search plugin
+    const enhancerSystemPrompt = () => `You are a prompt enhancer. Rewrite the user's prompt to be:
+- concise but complete
+- explicit about audience, tone, format, and success criteria
+- uses numbered steps where helpful
+- keeps original intent without adding new facts
+Return ONLY the enhanced prompt.`;
+
+    const buildPayload = (state) => {
+      const modelBase = state.model || 'deepseek/deepseek-chat';
+      const useOnline = !!state.reasoning;
+      const model = useOnline ? `${modelBase}:online` : modelBase;
       return {
         model,
-        stream: !!els.stream.checked,
+        stream: !!state.stream,
         messages: [
           { role: 'system', content: enhancerSystemPrompt() },
-          { role: 'user', content: userText }
+          { role: 'user', content: state.prompt }
         ],
-        // conservative defaults; change as you like
         temperature: 0.4,
         top_p: 0.95,
         max_tokens: 800
       };
-    }
+    };
 
-    // --- Streaming via fetch + ReadableStream (SSE data: lines)
-    async function callOpenRouter(payload){
-      clearError();
-      const usingProxy = els.proxyMode.checked;
-      const configuredProxy = persist.get('pe_proxy_url', '/proxy');
-      const endpoint = usingProxy ? configuredProxy : 'https://openrouter.ai/api/v1/chat/completions';
-      lastEndpoint = endpoint;
-
-      const headers = {
-        'Content-Type': 'application/json',
-        // Optional headers improve attribution/ranking on OpenRouter
-        'HTTP-Referer': location.origin,
-        'X-Title': 'Prompt Enhancer (Vanilla)',
-      };
-      if (payload.stream) headers['Accept'] = 'text/event-stream';
-      if (!usingProxy){
-        const key = (localStorage.getItem('or_api_key') || '').trim();
-        if (!key) throw new Error('Missing OpenRouter API key.');
-        headers['Authorization'] = `Bearer ${key}`;
-      }
-
-      aborter?.abort();
-      aborter = new AbortController();
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-        signal: aborter.signal
-      });
-
-      if (!res.ok) {
-        let reason = '';
-        try {
-          const j = await res.json();
-          reason = j.error?.message || '';
-        } catch {
-          try { reason = (await res.text()).slice(0, 120); } catch {}
-        }
-        throw new Error(`Request failed (${res.status}). ${reason ? 'Reason: ' + reason : 'Please verify your API key, model, or proxy.'}`);
-      }
-
-      if (!payload.stream) {
-        const json = await res.json();
-        return json.choices?.[0]?.message?.content || '';
-      }
-
-      // Stream parse SSE lines: look for "data: {json}"
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let acc = '';
-      let fullText = '';
-      while (true){
-        const {done, value} = await reader.read();
-        if (done) break;
-        acc += decoder.decode(value, { stream:true });
-        const parts = acc.split('\n\n');
-        acc = parts.pop() || '';
-        for (const p of parts){
-          // ignore comment/keepalive lines
-          const line = p.trim();
-          if (!line.startsWith('data:')) continue;
-          const data = line.slice(5).trim();
-          if (data === '[DONE]') continue;
-          try {
-            const j = JSON.parse(data);
-            const delta = j.choices?.[0]?.delta?.content;
-            if (typeof delta === 'string') {
-              fullText += delta;
-              els.out.textContent += delta;
-            }
-          } catch { /* ignore parse blips */ }
-        }
-      }
-      return els.out.textContent;
-    }
-
-    // --- Wire UI
-    async function enhance(runFromRetry=false){
-      const text = (els.input.value || '').trim();
-      if (!text) { showError('Please enter a prompt to enhance.'); return; }
-      els.out.textContent = '';
-      els.meta.textContent = '';
-      clearError();
-      setBusy(true);
-      const payload = runFromRetry && lastPayload ? lastPayload : buildPayload(text);
-      lastPayload = payload;
-      const t0 = performance.now();
-      try {
-        const content = await callOpenRouter(payload);
-        const t1 = performance.now();
-        els.copyBtn.disabled = !content;
-        els.retryBtn.disabled = false;
-        const modelShown = payload.model;
-        els.meta.textContent = `Model: ${modelShown} · ${Math.round(t1 - t0)} ms · ${payload.stream ? 'streamed' : 'non-stream'}`;
-        addToHistory({ input: text, output: content, model: modelShown, ts: Date.now() });
-      } catch (e) {
-        // If :online fails with 404, retry without :online
-        const msg = String(e && e.message || e || '');
-        const hadOnline = (payload.model || '').includes(':online');
-        const is404 = /\b404\b/.test(msg);
-        if (hadOnline && is404) {
-          try {
-            const fallbackPayload = { ...payload, model: payload.model.replace(':online','') };
-            const content = await callOpenRouter(fallbackPayload);
-            const t1 = performance.now();
-            els.copyBtn.disabled = !content;
-            els.retryBtn.disabled = false;
-            els.meta.textContent = `Model: ${fallbackPayload.model} · ${Math.round(t1 - t0)} ms · fallback from :online`;
-            addToHistory({ input: text, output: content, model: fallbackPayload.model, ts: Date.now() });
-            return; // success via fallback
-          } catch (e2) {
-            console.error(e2);
-            showError(String(e2.message || e2));
-          }
-        } else {
-          console.error(e);
-          showError(msg);
-        }
-      } finally {
-        setBusy(false);
-      }
-    }
-
-    els.enhanceBtn.addEventListener('click', () => enhance(false));
-    els.retryBtn.addEventListener('click', () => enhance(true));
-    els.copyBtn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(els.out.textContent);
-        els.copyBtn.textContent = 'Copied!';
-        setTimeout(()=> els.copyBtn.textContent = 'Copy', 900);
-      } catch {
-        showError('Clipboard permission blocked.');
-      }
-    });
-    els.clearBtn.addEventListener('click', () => {
-      els.input.value = ''; els.out.textContent = ''; els.meta.textContent = '';
-      clearError(); lastPayload = null; els.retryBtn.disabled = true; els.copyBtn.disabled = true;
-      persist.set('pe_prompt', '');
-    });
-
-    // Cmd/Ctrl+Enter to enhance
-    document.addEventListener('keydown', (e)=>{
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') enhance(false);
-    });
-
-    // --- History (last 5)
-    function renderHistory(){
-      const items = persist.get('pe_history', []);
+    // --- UI renderers
+    const renderHistory = (items) => {
       els.history.innerHTML = '';
       if (!items.length) {
         const p = document.createElement('div');
@@ -641,7 +634,7 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
         els.history.appendChild(p);
         return;
       }
-      items.forEach((h, idx) => {
+      items.forEach((h) => {
         const wrap = document.createElement('div');
         wrap.className = 'history-item';
 
@@ -662,7 +655,11 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
         insertBtn.className = 'ghost';
         insertBtn.type = 'button';
         insertBtn.textContent = 'Insert Input';
-        insertBtn.addEventListener('click', () => { els.input.value = h.input; persist.set('pe_prompt', h.input); els.input.focus(); });
+        insertBtn.addEventListener('click', () => {
+          store.setState({ prompt: h.input, stats: analyzePrompt(h.input) });
+          persist.set('pe_prompt', h.input);
+          els.input.focus();
+        });
 
         const copyBtn = document.createElement('button');
         copyBtn.className = 'ghost';
@@ -675,25 +672,333 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
         const reuseBtn = document.createElement('button');
         reuseBtn.type = 'button';
         reuseBtn.textContent = 'Reuse Model';
-        reuseBtn.addEventListener('click', () => { els.model.value = h.model.replace(':online',''); persist.set('pe_model', els.model.value); });
+        reuseBtn.addEventListener('click', () => {
+          store.setState({ model: h.model.replace(':online','') });
+          persist.set('pe_model', h.model.replace(':online',''));
+        });
 
         actions.append(insertBtn, copyBtn, reuseBtn);
         wrap.append(meta, out, actions);
         els.history.appendChild(wrap);
       });
-    }
+    };
 
-    function addToHistory(item){
-      const items = persist.get('pe_history', []);
-      const next = [item, ...items].slice(0, 5);
+    const renderInsights = (stats) => {
+      if (!els.insightsPanel) return;
+      els.insightsPanel.innerHTML = '';
+      const cards = [
+        { title: 'Words', value: stats.words },
+        { title: 'Sentences', value: stats.sentences },
+        { title: 'Questions', value: stats.questions },
+        { title: 'Verbs', value: stats.verbs },
+        { title: 'Read time', value: `${stats.readingTime} min` }
+      ];
+      cards.forEach((c) => {
+        const div = document.createElement('div');
+        div.className = 'stat';
+        div.innerHTML = `<div class="small muted">${c.title}</div><div style="font-weight:700">${c.value}</div>`;
+        els.insightsPanel.appendChild(div);
+      });
+      const scoreWrap = document.createElement('div');
+      scoreWrap.className = 'stat';
+      scoreWrap.innerHTML = `<div class="small muted">Clarity score</div><div style="font-weight:700">${stats.score}/100</div>`;
+      const meter = document.createElement('div');
+      meter.className = 'meter';
+      const bar = document.createElement('span');
+      bar.style.width = `${stats.score}%`;
+      meter.appendChild(bar);
+      scoreWrap.appendChild(meter);
+      els.insightsPanel.appendChild(scoreWrap);
+
+      els.qualitySuggestions.innerHTML = '';
+      const hints = stats.warnings.length ? stats.warnings : ['Looks good. Add a constraint or deadline if relevant.'];
+      hints.slice(0, 4).forEach((h) => {
+        const li = document.createElement('li');
+        li.textContent = h;
+        els.qualitySuggestions.appendChild(li);
+      });
+    };
+
+    const renderPresets = (filter) => {
+      if (!els.presetGrid) return;
+      els.presetGrid.innerHTML = '';
+      const q = (filter || '').trim().toLowerCase();
+      const list = presets.filter((p) => !q || p.title.toLowerCase().includes(q) || p.tag.includes(q));
+      list.forEach((p) => {
+        const card = document.createElement('div');
+        card.className = 'preset-card';
+        card.setAttribute('role', 'listitem');
+        const title = document.createElement('div');
+        title.style.fontWeight = '700';
+        title.textContent = p.title;
+        const tag = document.createElement('div');
+        tag.className = 'chip';
+        tag.textContent = p.tag;
+        const desc = document.createElement('div');
+        desc.className = 'small muted';
+        desc.textContent = p.body.slice(0, 120) + (p.body.length > 120 ? '…' : '');
+        const btn = document.createElement('button');
+        btn.className = 'ghost';
+        btn.type = 'button';
+        btn.textContent = 'Use preset';
+        btn.addEventListener('click', () => {
+          const merged = `${p.body}\n\nContext:\n${store.getState().prompt || ''}`.trim();
+          store.setState({ prompt: merged, stats: analyzePrompt(merged) });
+          persist.set('pe_prompt', merged);
+          els.input.focus();
+        });
+        card.append(title, tag, desc, btn);
+        els.presetGrid.appendChild(card);
+      });
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'small muted';
+        empty.textContent = 'No presets match your search.';
+        els.presetGrid.appendChild(empty);
+      }
+    };
+
+    const renderNetwork = (online) => {
+      if (!els.networkPill) return;
+      els.networkPill.hidden = online;
+      els.networkDot.className = `dot ${online ? 'online' : 'offline'}`;
+      els.networkLabel.textContent = online ? 'Back online — live requests available.' : 'Offline — cached UI only.';
+      document.body.toggleAttribute('data-offline', !online);
+    };
+
+    store.subscribe((state) => {
+      if (els.input.value !== state.prompt) els.input.value = state.prompt;
+      els.model.value = state.model;
+      els.stream.checked = state.stream;
+      els.reasoning.checked = state.reasoning;
+      els.proxyMode.checked = state.proxyMode;
+      if (els.proxyUrl && els.proxyUrl.value !== state.proxyUrl) els.proxyUrl.value = state.proxyUrl;
+      els.enhanceBtn.disabled = state.busy;
+      els.retryBtn.disabled = state.busy || !state.lastPayload;
+      els.enhanceBtn.innerHTML = state.busy ? `<span class="spinner" aria-hidden="true"></span> Generating…` : 'Enhance Prompt';
+      els.out.textContent = state.output;
+      els.meta.textContent = state.meta;
+      if (state.error) { showError(state.error); } else { clearError(); }
+      renderHistory(state.history);
+      renderInsights(state.stats);
+      renderNetwork(state.online);
+    });
+
+    // --- Events wired to store
+    els.input.addEventListener('input', (e) => {
+      const value = e.target.value;
+      persist.set('pe_prompt', value);
+      store.setState({ prompt: value, stats: analyzePrompt(value) });
+    });
+    els.model.addEventListener('change', () => { persist.set('pe_model', els.model.value); store.setState({ model: els.model.value }); });
+    els.stream.addEventListener('change', () => { persist.set('pe_stream', !!els.stream.checked); store.setState({ stream: !!els.stream.checked }); });
+    els.reasoning.addEventListener('change', () => { persist.set('pe_reasoning', !!els.reasoning.checked); store.setState({ reasoning: !!els.reasoning.checked }); });
+    els.proxyMode.addEventListener('change', () => { persist.set('pe_proxy', !!els.proxyMode.checked); store.setState({ proxyMode: !!els.proxyMode.checked }); });
+    els.presetSearch?.addEventListener('input', (e) => renderPresets(e.target.value));
+    els.themeToggle.addEventListener('click', () => setTheme(store.getState().theme === 'dark' ? 'light' : 'dark'));
+
+    // Proxy modal wiring
+    const openProxyModal = () => { els.proxyModal?.setAttribute('aria-hidden', 'false'); setTimeout(() => els.proxyUrl?.focus(), 0); };
+    const closeProxyModal = () => { els.proxyModal?.setAttribute('aria-hidden', 'true'); };
+    els.proxyConfigBtn?.addEventListener('click', openProxyModal);
+    els.proxyCancelBtn?.addEventListener('click', closeProxyModal);
+    els.proxySaveBtn?.addEventListener('click', () => {
+      const url = (els.proxyUrl?.value || '').trim() || '/proxy';
+      persist.set('pe_proxy_url', url);
+      store.setState({ proxyUrl: url });
+      closeProxyModal();
+    });
+    els.proxyModal?.addEventListener('click', (e) => { if (e.target === els.proxyModal) closeProxyModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProxyModal(); });
+
+    // Load models
+    async function loadModels() {
+      try {
+        const key = (localStorage.getItem('or_api_key') || '').trim();
+        if (!key) return;
+        const res = await fetch('https://openrouter.ai/api/v1/models', {
+          headers: { 'Authorization': `Bearer ${key}` }
+        });
+        if (!res.ok) throw new Error(`Models list failed: ${res.status}`);
+        const data = await res.json();
+        const free = (data.data || []).filter(m => {
+          const p = m.pricing || {};
+          const z = (x) => x === '0' || x === 0 || x === '0.0' || x === '0.00000';
+          return z(p.prompt) && z(p.completion);
+        });
+        els.model.innerHTML = '';
+        const opts = free.length ? free : (data.data || []);
+        opts
+          .filter(m => (m.architecture?.modality || '').includes('text'))
+          .slice(0, 200)
+          .sort((a,b)=> (a.name || a.id).localeCompare(b.name || b.id))
+          .forEach(m => {
+            const o = document.createElement('option');
+            o.value = m.id;
+            o.textContent = `${m.name || m.id}${(m.pricing && (m.pricing.prompt==='0' && m.pricing.completion==='0')) ? ' · FREE' : ''}`;
+            els.model.appendChild(o);
+          });
+        const saved = persist.get('pe_model', '');
+        if (saved) els.model.value = saved;
+        store.setState({ model: els.model.value || store.getState().model });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadModels();
+    els.saveKeyBtn.addEventListener('click', () => { localStorage.setItem('or_api_key', els.apiKey.value.trim()); els.saveKeyBtn.textContent = 'Saved'; setTimeout(()=> els.saveKeyBtn.textContent = 'Save Key', 900); loadModels(); });
+    let hidden = false;
+    els.hideKeyBtn.addEventListener('click', () => { hidden = !hidden; els.apiKey.type = hidden ? 'password' : 'text'; els.hideKeyBtn.textContent = hidden ? 'Show' : 'Hide'; });
+    const savedKey = localStorage.getItem('or_api_key') || '';
+    if (savedKey) els.apiKey.value = savedKey;
+
+    // --- Actions
+    const addToHistory = (item) => {
+      const next = [item, ...store.getState().history].slice(0, 5);
       persist.set('pe_history', next);
-      renderHistory();
-    }
+      store.setState({ history: next });
+    };
 
-    els.clearHistoryBtn.addEventListener('click', () => { persist.set('pe_history', []); renderHistory(); });
+    const enhance = async (useLast=false) => {
+      const text = store.getState().prompt.trim();
+      if (!text) { showError('Please enter a prompt to enhance.'); return; }
+      clearError();
+      store.setState({ busy: true, output: '', meta: '', error: '' });
+      const payload = useLast && store.getState().lastPayload ? store.getState().lastPayload : buildPayload(store.getState());
+      const t0 = performance.now();
+      try {
+        let content = '';
+        content = await client.request(payload, {
+          usingProxy: store.getState().proxyMode,
+          proxyUrl: store.getState().proxyUrl,
+          onChunk: (chunk) => { store.setState((prev) => ({ output: prev.output + chunk })); }
+        });
+        const t1 = performance.now();
+        const meta = `Model: ${payload.model} · ${Math.round(t1 - t0)} ms · ${payload.stream ? 'streamed' : 'non-stream'}`;
+        store.setState({ meta, busy: false, lastPayload: payload, output: content });
+        els.copyBtn.disabled = !content;
+        els.retryBtn.disabled = false;
+        addToHistory({ input: text, output: content, model: payload.model, ts: Date.now() });
+      } catch (e) {
+        const msg = String(e?.message || e || '');
+        const hadOnline = (payload.model || '').includes(':online');
+        const is404 = /\b404\b/.test(msg);
+        if (hadOnline && is404) {
+          try {
+            const fallbackPayload = { ...payload, model: payload.model.replace(':online','') };
+            const content = await client.request(fallbackPayload, {
+              usingProxy: store.getState().proxyMode,
+              proxyUrl: store.getState().proxyUrl,
+              onChunk: (chunk) => { store.setState((prev) => ({ output: prev.output + chunk })); }
+            });
+            const t1 = performance.now();
+            const meta = `Model: ${fallbackPayload.model} · ${Math.round(t1 - t0)} ms · fallback from :online`;
+            store.setState({ meta, busy: false, lastPayload: fallbackPayload, output: content });
+            addToHistory({ input: text, output: content, model: fallbackPayload.model, ts: Date.now() });
+            return;
+          } catch (err2) {
+            console.error(err2);
+            store.setState({ error: String(err2.message || err2) });
+          }
+        } else {
+          console.error(e);
+          store.setState({ error: msg });
+        }
+      } finally {
+        store.setState({ busy: false });
+      }
+    };
 
-    // initial render
-    renderHistory();
+    els.enhanceBtn.addEventListener('click', () => enhance(false));
+    els.retryBtn.addEventListener('click', () => enhance(true));
+    els.copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(store.getState().output);
+        els.copyBtn.textContent = 'Copied!';
+        setTimeout(()=> els.copyBtn.textContent = 'Copy', 900);
+      } catch {
+        showError('Clipboard permission blocked.');
+      }
+    });
+    els.clearBtn.addEventListener('click', () => {
+      store.setState({ prompt: '', output: '', meta: '', lastPayload: null, stats: analyzePrompt('') });
+      persist.set('pe_prompt', '');
+      els.input.focus();
+    });
+    els.clearHistoryBtn.addEventListener('click', () => { persist.set('pe_history', []); store.setState({ history: [] }); });
+
+    document.addEventListener('keydown', (e)=>{
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') enhance(false);
+    });
+
+    // --- Export / Import
+    els.exportBtn.addEventListener('click', () => {
+      const payload = {
+        prompt: store.getState().prompt,
+        history: store.getState().history,
+        settings: {
+          model: store.getState().model,
+          stream: store.getState().stream,
+          reasoning: store.getState().reasoning,
+          proxyMode: store.getState().proxyMode,
+          proxyUrl: store.getState().proxyUrl,
+          theme: store.getState().theme,
+        }
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'prompt-enhancer-session.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    els.importBtn.addEventListener('click', () => els.importFile.click());
+    els.importFile.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data.prompt) { persist.set('pe_prompt', data.prompt); }
+        if (data.history) { persist.set('pe_history', data.history); }
+        if (data.settings) {
+          const keyMap = {
+            model: 'pe_model',
+            stream: 'pe_stream',
+            reasoning: 'pe_reasoning',
+            proxyMode: 'pe_proxy',
+            proxyUrl: 'pe_proxy_url',
+            theme: 'pe_theme'
+          };
+          Object.entries(data.settings).forEach(([k,v]) => persist.set(keyMap[k] || `pe_${k}`, v));
+        }
+        store.setState({
+          prompt: data.prompt || store.getState().prompt,
+          history: data.history || store.getState().history,
+          model: data.settings?.model || store.getState().model,
+          stream: data.settings?.stream ?? store.getState().stream,
+          reasoning: data.settings?.reasoning ?? store.getState().reasoning,
+          proxyMode: data.settings?.proxyMode ?? store.getState().proxyMode,
+          proxyUrl: data.settings?.proxyUrl || store.getState().proxyUrl,
+          theme: data.settings?.theme || store.getState().theme,
+          stats: analyzePrompt(data.prompt || store.getState().prompt),
+        });
+        setTheme(store.getState().theme);
+      } catch (err) {
+        showError('Import failed. Is the JSON valid?');
+        console.error(err);
+      } finally {
+        els.importFile.value = '';
+      }
+    });
+
+    // --- Connectivity
+    window.addEventListener('online', () => store.setState({ online: true }));
+    window.addEventListener('offline', () => store.setState({ online: false }));
+
+    // --- History initial render
+    renderPresets('');
 
     // --- PWA: Service Worker registration
     if ('serviceWorker' in navigator) {
@@ -703,49 +1008,52 @@ Return ONLY the enhanced prompt, suitable as a single prompt for a top-tier mode
     }
 
     // --- PWA: Install prompt banner
-    (function pwaInstall(){
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
-      let deferredEvt = null;
-      const sessionAnswered = sessionStorage.getItem('pe_install_answered') === '1';
+    const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+    let deferredEvt = null;
+    const maybeShowInstall = () => {
+      const state = store.getState();
+      const show = !isStandalone() && !state.installDismissed && (state.installReady || !state.installEvent);
+      els.installBanner.style.display = show ? 'block' : 'none';
+      els.installBtn.disabled = !state.installReady;
+      if (show) els.installBanner.classList.add('reveal');
+    };
+    if (!isStandalone() && !store.getState().installDismissed) {
+      els.installBanner.style.display = 'block';
+      els.installBanner.classList.add('reveal');
+      els.installBtn.disabled = true;
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredEvt = e;
+      store.setState({ installReady: true, installEvent: e });
+      maybeShowInstall();
+    });
+    window.addEventListener('appinstalled', () => {
+      sessionStorage.setItem('pe_install_answered', '1');
+      store.setState({ installDismissed: true });
+      maybeShowInstall();
+    });
+    els.installBtn.addEventListener('click', async () => {
+      if (!deferredEvt) return;
+      els.installBanner.style.display = 'none';
+      deferredEvt.prompt();
+      try { await deferredEvt.userChoice; } catch {}
+      sessionStorage.setItem('pe_install_answered', '1');
+      store.setState({ installDismissed: true });
+      deferredEvt = null;
+    });
+    els.dismissInstallBtn.addEventListener('click', () => {
+      els.installBanner.style.display = 'none';
+      els.installBanner.classList.remove('reveal');
+      sessionStorage.setItem('pe_install_answered', '1');
+      store.setState({ installDismissed: true });
+    });
 
-      // Show banner immediately for eligible sessions; enable Install when event arrives
-      if (!isStandalone && !sessionAnswered) {
-        els.installBanner.style.display = 'block';
-        els.installBanner.classList.add('reveal');
-        els.installBtn.disabled = true;
-      }
+    maybeShowInstall();
 
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); // use custom banner
-        deferredEvt = e;
-        if (!isStandalone && !sessionAnswered) {
-          els.installBanner.style.display = 'block';
-          els.installBanner.classList.add('reveal');
-          els.installBtn.disabled = false;
-        }
-      });
-
-      window.addEventListener('appinstalled', () => {
-        els.installBanner.style.display = 'none';
-        els.installBanner.classList.remove('reveal');
-        sessionStorage.setItem('pe_install_answered', '1');
-      });
-
-      els.installBtn.addEventListener('click', async () => {
-        if (!deferredEvt) { return; }
-        els.installBanner.style.display = 'none';
-        deferredEvt.prompt();
-        try { await deferredEvt.userChoice; } catch {}
-        sessionStorage.setItem('pe_install_answered', '1');
-        deferredEvt = null;
-      });
-
-      els.dismissInstallBtn.addEventListener('click', () => {
-        els.installBanner.style.display = 'none';
-        els.installBanner.classList.remove('reveal');
-        sessionStorage.setItem('pe_install_answered', '1');
-      });
-    })();
+    // --- Prefill initial insights/render
+    renderHistory(store.getState().history);
+    renderInsights(store.getState().stats);
   </script>
 </body>
 </html>

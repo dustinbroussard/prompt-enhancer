@@ -14,9 +14,12 @@ Deploy `proxy.js` as a Cloudflare Worker (or Vercel Edge function) with `OPENROU
 
 ## Features
 - SSE streaming for instant token updates
+- Prompt quality insights (clarity score, word count, warnings) with actionable hints
+- Preset library for common workflows (research briefs, QA plans, exec summaries, JSON/table formats)
 - Clipboard copy, retry, clear
 - Auto-fetch model list; filters free models based on pricing
 - Optional `Web Search` toggle appends `:online` to the model for OpenRouter web search
+- Backup/restore of local session state (prompt, history, settings) via JSON
 - 100% vanilla HTML/CSS/JS, responsive
 - Accessible: labeled controls, ARIA live regions, reduced motion support
 - Safer: CSP meta, friendlier error messages, no HTML injection

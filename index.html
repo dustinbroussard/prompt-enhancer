@@ -120,6 +120,10 @@
     .out{
       min-height: 160px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
+    .output-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap: wrap; margin-bottom:8px }
+    .compare{ display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top:10px }
+    .compare-card{ padding:10px; border-radius: var(--radius); background: color-mix(in oklab, var(--bg) 92%, var(--fg) 8%); border: 1px solid var(--border) }
+    .compare-out{ min-height: 140px }
     .actions{ display:flex; gap:10px; flex-wrap: wrap }
     .muted{ opacity:.7 }
     .small{ font-size: 12px }
@@ -192,6 +196,7 @@
     .preset-card{ padding:12px; border-radius: var(--radius); border: 1px solid var(--border); background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); display:flex; flex-direction:column; gap:6px; min-height:120px }
     .preset-card button{ width:auto }
     .chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); border: 1px solid var(--border); font-size:12px }
+    .missing{ display:flex; gap:6px; flex-wrap: wrap; margin-top:6px }
     .toolbar{ display:flex; gap:10px; flex-wrap: wrap; align-items:center }
     .tagline{ font-size:13px; opacity:.85 }
     .banner{ border-radius: var(--radius); padding: 14px; background: color-mix(in oklab, var(--bg) 90%, var(--fg) 10%); border: 1px solid var(--border); display:flex; gap:10px; align-items:flex-start }
@@ -268,7 +273,6 @@
       <div class="actions" style="margin-top:10px">
         <button id="enhanceBtn" type="button">Enhance Prompt</button>
         <button id="retryBtn" class="ghost" type="button" disabled>Retry</button>
-        <button id="copyBtn" class="ghost" type="button" disabled>Copy</button>
         <button id="clearBtn" class="ghost" type="button">Clear</button>
       </div>
       <div class="banner" style="margin-top:10px">
@@ -281,8 +285,25 @@
     </section>
 
     <section class="card">
-      <div class="label">Enhanced prompt</div>
+      <div class="output-toolbar">
+        <div class="label">Enhanced prompt</div>
+        <div class="actions">
+          <button id="compareToggle" class="ghost" type="button" aria-pressed="false">Compare</button>
+          <button id="copyRawBtn" class="ghost" type="button" disabled>Copy Raw</button>
+          <button id="copyEnhancedBtn" class="ghost" type="button" disabled>Copy Enhanced</button>
+        </div>
+      </div>
       <div id="out" class="out" role="region" aria-live="polite" aria-label="Enhanced prompt output"></div>
+      <div id="compare" class="compare" hidden>
+        <div class="compare-card">
+          <div class="small muted">Raw</div>
+          <div id="rawOut" class="out compare-out" aria-label="Raw prompt"></div>
+        </div>
+        <div class="compare-card">
+          <div class="small muted">Enhanced</div>
+          <div id="enhancedOut" class="out compare-out" aria-label="Enhanced prompt"></div>
+        </div>
+      </div>
       <div id="meta" class="small muted" style="margin-top:10px" role="status" aria-live="polite"></div>
       <div id="err" class="small error pill" role="alert" style="display:none; margin-top:10px"></div>
     </section>
@@ -352,6 +373,7 @@
   </div>
 
   <script type="module">
+    // --- DOM
     const els = {
       apiKey: document.getElementById('apiKey'),
       saveKeyBtn: document.getElementById('saveKeyBtn'),
@@ -360,9 +382,14 @@
       input: document.getElementById('input'),
       enhanceBtn: document.getElementById('enhanceBtn'),
       retryBtn: document.getElementById('retryBtn'),
-      copyBtn: document.getElementById('copyBtn'),
+      compareToggle: document.getElementById('compareToggle'),
+      copyRawBtn: document.getElementById('copyRawBtn'),
+      copyEnhancedBtn: document.getElementById('copyEnhancedBtn'),
       clearBtn: document.getElementById('clearBtn'),
       out: document.getElementById('out'),
+      compare: document.getElementById('compare'),
+      rawOut: document.getElementById('rawOut'),
+      enhancedOut: document.getElementById('enhancedOut'),
       meta: document.getElementById('meta'),
       err: document.getElementById('err'),
       stream: document.getElementById('stream'),
@@ -391,6 +418,31 @@
       networkLabel: document.getElementById('networkLabel'),
     };
 
+    // --- Config
+    const config = {
+      maxHistory: 5,
+      defaultModel: 'deepseek/deepseek-chat',
+      maxTokens: 800,
+      maxModels: 200,
+      copyFeedbackMs: 900,
+      modelListEndpoint: 'https://openrouter.ai/api/v1/models',
+      completionsEndpoint: 'https://openrouter.ai/api/v1/chat/completions',
+      missingHintsMax: 3
+    };
+
+    const storageKeys = {
+      apiKey: 'or_api_key',
+      prompt: 'pe_prompt',
+      model: 'pe_model',
+      stream: 'pe_stream',
+      reasoning: 'pe_reasoning',
+      proxyMode: 'pe_proxy',
+      proxyUrl: 'pe_proxy_url',
+      history: 'pe_history',
+      theme: 'pe_theme'
+    };
+
+    // --- State helpers
     const persist = {
       get(key, fallback) {
         try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -401,6 +453,17 @@
     };
 
     const clone = (value) => (typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value)));
+    const createEl = (tag, className, text) => {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text != null) el.textContent = text;
+      return el;
+    };
+    const setButtonFeedback = (btn, text) => {
+      const original = btn.textContent;
+      btn.textContent = text;
+      setTimeout(() => { btn.textContent = original; }, config.copyFeedbackMs);
+    };
     const createStore = (initialState) => {
       let state = clone(initialState);
       const subs = new Set();
@@ -459,6 +522,11 @@
       const hasFormat = /(json|table|outline|steps|bullets|markdown|csv)/i.test(trimmed);
       const hasSuccess = /(success|measure|criteria|done|acceptance|definition of done)/i.test(trimmed);
       const hasTone = /(tone|voice|style|brand)/i.test(trimmed);
+      const missingElements = [];
+      if (!hasAudience) missingElements.push('Audience');
+      if (!hasFormat) missingElements.push('Format');
+      if (!hasSuccess) missingElements.push('Success criteria');
+      if (!hasTone) missingElements.push('Tone');
       const scoreBase = 40 + Math.min(words, 240) * 0.1 + verbs * 2;
       const scoreBonus = (hasAudience + hasFormat + hasSuccess + hasTone) * 8 + (questions ? 4 : 0);
       const scorePenalty = words < 12 ? 12 : 0;
@@ -476,32 +544,36 @@
         verbs,
         score: Math.round(score),
         warnings,
+        missingElements,
         readingTime: Math.max(1, Math.ceil(words / 180)),
       };
     };
 
+    // --- State
     const initialTheme = (() => {
-      const saved = persist.get('pe_theme', null);
+      const saved = persist.get(storageKeys.theme, null);
       if (saved) return saved;
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     })();
 
     const initialState = {
-      prompt: persist.get('pe_prompt', ''),
+      prompt: persist.get(storageKeys.prompt, ''),
       output: '',
+      lastInput: '',
       meta: '',
       error: '',
-      model: persist.get('pe_model', ''),
-      stream: persist.get('pe_stream', true),
-      reasoning: persist.get('pe_reasoning', false),
-      proxyMode: persist.get('pe_proxy', false),
-      proxyUrl: persist.get('pe_proxy_url', '/proxy'),
-      history: persist.get('pe_history', []),
+      model: persist.get(storageKeys.model, ''),
+      stream: persist.get(storageKeys.stream, true),
+      reasoning: persist.get(storageKeys.reasoning, false),
+      proxyMode: persist.get(storageKeys.proxyMode, false),
+      proxyUrl: persist.get(storageKeys.proxyUrl, '/proxy'),
+      history: persist.get(storageKeys.history, []),
       busy: false,
       lastPayload: null,
+      compareMode: false,
       online: navigator.onLine,
       theme: initialTheme,
-      stats: analyzePrompt(persist.get('pe_prompt', '')),
+      stats: analyzePrompt(persist.get(storageKeys.prompt, '')),
       installDismissed: sessionStorage.getItem('pe_install_answered') === '1',
       installReady: false,
       installEvent: null,
@@ -512,7 +584,7 @@
     const setTheme = (theme) => {
       document.documentElement.setAttribute('data-theme', theme);
       els.themeToggle.textContent = theme === 'dark' ? '🌞' : '🌙';
-      persist.set('pe_theme', theme);
+      persist.set(storageKeys.theme, theme);
       store.setState({ theme });
     };
     setTheme(initialState.theme);
@@ -523,15 +595,43 @@
     };
     const clearError = () => { els.err.style.display = 'none'; };
 
-    // --- Service helpers
+    // --- Client
     class OpenRouterClient {
       constructor() {
         this.aborter = null;
       }
       abort() { this.aborter?.abort(); }
+      static normalizeProxyUrl(input) {
+        const raw = (input || '').trim();
+        if (!raw) return new URL('/proxy', location.origin).toString();
+        try {
+          return new URL(raw, location.origin).toString();
+        } catch {
+          return null;
+        }
+      }
+      static parseSseEvents(buffer, onEvent) {
+        const events = buffer.split(/\n\n/);
+        const trailing = events.pop() || '';
+        events.forEach((evt) => onEvent(evt));
+        return trailing;
+      }
+      static parseSseEvent(event, onData) {
+        const lines = event.split(/\r?\n/);
+        const dataLines = lines
+          .filter((line) => line.startsWith('data:'))
+          .map((line) => line.slice(5).trimStart());
+        if (!dataLines.length) return;
+        const data = dataLines.join('\n').trim();
+        if (!data || data === '[DONE]') return;
+        onData(data);
+      }
       async request(payload, opts) {
         const { usingProxy, proxyUrl, onChunk } = opts;
-        const endpoint = usingProxy ? proxyUrl : 'https://openrouter.ai/api/v1/chat/completions';
+        const endpoint = usingProxy ? OpenRouterClient.normalizeProxyUrl(proxyUrl) : config.completionsEndpoint;
+        if (usingProxy && !endpoint) {
+          throw new Error('Invalid proxy URL. Use /proxy or https://host/path.');
+        }
         const headers = {
           'Content-Type': 'application/json',
           'HTTP-Referer': location.origin,
@@ -539,7 +639,7 @@
         };
         if (payload.stream) headers['Accept'] = 'text/event-stream';
         if (!usingProxy) {
-          const key = (localStorage.getItem('or_api_key') || '').trim();
+          const key = (localStorage.getItem(storageKeys.apiKey) || '').trim();
           if (!key) throw new Error('Missing OpenRouter API key.');
           headers['Authorization'] = `Bearer ${key}`;
         }
@@ -577,13 +677,21 @@
           const { done, value } = await reader.read();
           if (done) break;
           acc += decoder.decode(value, { stream: true });
-          const parts = acc.split('\n\n');
-          acc = parts.pop() || '';
-          for (const p of parts) {
-            const line = p.trim();
-            if (!line.startsWith('data:')) continue;
-            const data = line.slice(5).trim();
-            if (data === '[DONE]') continue;
+          acc = OpenRouterClient.parseSseEvents(acc, (evt) => {
+            OpenRouterClient.parseSseEvent(evt, (data) => {
+              try {
+                const j = JSON.parse(data);
+                const delta = j.choices?.[0]?.delta?.content;
+                if (typeof delta === 'string') {
+                  fullText += delta;
+                  onChunk?.(delta);
+                }
+              } catch { /* ignore parse blips */ }
+            });
+          });
+        }
+        if (acc.trim()) {
+          OpenRouterClient.parseSseEvent(acc, (data) => {
             try {
               const j = JSON.parse(data);
               const delta = j.choices?.[0]?.delta?.content;
@@ -592,7 +700,7 @@
                 onChunk?.(delta);
               }
             } catch { /* ignore parse blips */ }
-          }
+          });
         }
         return fullText;
       }
@@ -600,6 +708,7 @@
 
     const client = new OpenRouterClient();
 
+    // --- Prompt config
     const enhancerSystemPrompt = () => `You are a prompt enhancer. Rewrite the user's prompt to be:
 - concise but complete
 - explicit about audience, tone, format, and success criteria
@@ -607,8 +716,9 @@
 - keeps original intent without adding new facts
 Return ONLY the enhanced prompt.`;
 
+    // --- Payload helpers
     const buildPayload = (state) => {
-      const modelBase = state.model || 'deepseek/deepseek-chat';
+      const modelBase = state.model || config.defaultModel;
       const useOnline = !!state.reasoning;
       const model = useOnline ? `${modelBase}:online` : modelBase;
       return {
@@ -620,7 +730,7 @@ Return ONLY the enhanced prompt.`;
         ],
         temperature: 0.4,
         top_p: 0.95,
-        max_tokens: 800
+        max_tokens: config.maxTokens
       };
     };
 
@@ -628,53 +738,41 @@ Return ONLY the enhanced prompt.`;
     const renderHistory = (items) => {
       els.history.innerHTML = '';
       if (!items.length) {
-        const p = document.createElement('div');
-        p.className = 'small muted';
-        p.textContent = 'No history yet.';
-        els.history.appendChild(p);
+        els.history.appendChild(createEl('div', 'small muted', 'No history yet.'));
         return;
       }
       items.forEach((h) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'history-item';
+        const wrap = createEl('div', 'history-item');
 
-        const meta = document.createElement('div');
-        meta.className = 'small muted';
+        const meta = createEl('div', 'small muted');
         const dt = new Date(h.ts);
         meta.textContent = `${h.model} · ${dt.toLocaleString()}`;
 
-        const out = document.createElement('div');
-        out.className = 'small';
+        const out = createEl('div', 'small');
         out.style.whiteSpace = 'pre-wrap';
         out.textContent = h.output.slice(0, 400) + (h.output.length > 400 ? '…' : '');
 
-        const actions = document.createElement('div');
-        actions.className = 'history-actions';
+        const actions = createEl('div', 'history-actions');
 
-        const insertBtn = document.createElement('button');
-        insertBtn.className = 'ghost';
+        const insertBtn = createEl('button', 'ghost', 'Insert Input');
         insertBtn.type = 'button';
-        insertBtn.textContent = 'Insert Input';
         insertBtn.addEventListener('click', () => {
           store.setState({ prompt: h.input, stats: analyzePrompt(h.input) });
-          persist.set('pe_prompt', h.input);
+          persist.set(storageKeys.prompt, h.input);
           els.input.focus();
         });
 
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'ghost';
+        const copyBtn = createEl('button', 'ghost', 'Copy Output');
         copyBtn.type = 'button';
-        copyBtn.textContent = 'Copy Output';
         copyBtn.addEventListener('click', async () => {
           try { await navigator.clipboard.writeText(h.output); } catch {}
         });
 
-        const reuseBtn = document.createElement('button');
+        const reuseBtn = createEl('button', null, 'Reuse Model');
         reuseBtn.type = 'button';
-        reuseBtn.textContent = 'Reuse Model';
         reuseBtn.addEventListener('click', () => {
           store.setState({ model: h.model.replace(':online','') });
-          persist.set('pe_model', h.model.replace(':online',''));
+          persist.set(storageKeys.model, h.model.replace(':online',''));
         });
 
         actions.append(insertBtn, copyBtn, reuseBtn);
@@ -694,27 +792,40 @@ Return ONLY the enhanced prompt.`;
         { title: 'Read time', value: `${stats.readingTime} min` }
       ];
       cards.forEach((c) => {
-        const div = document.createElement('div');
-        div.className = 'stat';
-        div.innerHTML = `<div class="small muted">${c.title}</div><div style="font-weight:700">${c.value}</div>`;
+        const div = createEl('div', 'stat');
+        const title = createEl('div', 'small muted', c.title);
+        const value = createEl('div', null, c.value);
+        value.style.fontWeight = '700';
+        div.append(title, value);
         els.insightsPanel.appendChild(div);
       });
-      const scoreWrap = document.createElement('div');
-      scoreWrap.className = 'stat';
-      scoreWrap.innerHTML = `<div class="small muted">Clarity score</div><div style="font-weight:700">${stats.score}/100</div>`;
-      const meter = document.createElement('div');
-      meter.className = 'meter';
-      const bar = document.createElement('span');
+      const scoreWrap = createEl('div', 'stat');
+      const scoreTitle = createEl('div', 'small muted', 'Clarity score');
+      const scoreValue = createEl('div', null, `${stats.score}/100`);
+      scoreValue.style.fontWeight = '700';
+      const meter = createEl('div', 'meter');
+      const bar = createEl('span');
       bar.style.width = `${stats.score}%`;
       meter.appendChild(bar);
-      scoreWrap.appendChild(meter);
+      scoreWrap.append(scoreTitle, scoreValue, meter);
       els.insightsPanel.appendChild(scoreWrap);
+
+      const missingWrap = createEl('div', 'stat');
+      const missingTitle = createEl('div', 'small muted', 'Missing elements');
+      const missingChips = createEl('div', 'missing');
+      const missing = stats.missingElements.slice(0, config.missingHintsMax);
+      if (!missing.length) {
+        missingChips.appendChild(createEl('div', 'chip', 'Complete'));
+      } else {
+        missing.forEach((label) => missingChips.appendChild(createEl('div', 'chip', label)));
+      }
+      missingWrap.append(missingTitle, missingChips);
+      els.insightsPanel.appendChild(missingWrap);
 
       els.qualitySuggestions.innerHTML = '';
       const hints = stats.warnings.length ? stats.warnings : ['Looks good. Add a constraint or deadline if relevant.'];
       hints.slice(0, 4).forEach((h) => {
-        const li = document.createElement('li');
-        li.textContent = h;
+        const li = createEl('li', null, h);
         els.qualitySuggestions.appendChild(li);
       });
     };
@@ -725,36 +836,26 @@ Return ONLY the enhanced prompt.`;
       const q = (filter || '').trim().toLowerCase();
       const list = presets.filter((p) => !q || p.title.toLowerCase().includes(q) || p.tag.includes(q));
       list.forEach((p) => {
-        const card = document.createElement('div');
-        card.className = 'preset-card';
+        const card = createEl('div', 'preset-card');
         card.setAttribute('role', 'listitem');
-        const title = document.createElement('div');
+        const title = createEl('div', null, p.title);
         title.style.fontWeight = '700';
-        title.textContent = p.title;
-        const tag = document.createElement('div');
-        tag.className = 'chip';
-        tag.textContent = p.tag;
-        const desc = document.createElement('div');
-        desc.className = 'small muted';
+        const tag = createEl('div', 'chip', p.tag);
+        const desc = createEl('div', 'small muted');
         desc.textContent = p.body.slice(0, 120) + (p.body.length > 120 ? '…' : '');
-        const btn = document.createElement('button');
-        btn.className = 'ghost';
+        const btn = createEl('button', 'ghost', 'Use preset');
         btn.type = 'button';
-        btn.textContent = 'Use preset';
         btn.addEventListener('click', () => {
           const merged = `${p.body}\n\nContext:\n${store.getState().prompt || ''}`.trim();
           store.setState({ prompt: merged, stats: analyzePrompt(merged) });
-          persist.set('pe_prompt', merged);
+          persist.set(storageKeys.prompt, merged);
           els.input.focus();
         });
         card.append(title, tag, desc, btn);
         els.presetGrid.appendChild(card);
       });
       if (!list.length) {
-        const empty = document.createElement('div');
-        empty.className = 'small muted';
-        empty.textContent = 'No presets match your search.';
-        els.presetGrid.appendChild(empty);
+        els.presetGrid.appendChild(createEl('div', 'small muted', 'No presets match your search.'));
       }
     };
 
@@ -775,27 +876,36 @@ Return ONLY the enhanced prompt.`;
       if (els.proxyUrl && els.proxyUrl.value !== state.proxyUrl) els.proxyUrl.value = state.proxyUrl;
       els.enhanceBtn.disabled = state.busy;
       els.retryBtn.disabled = state.busy || !state.lastPayload;
+      els.compareToggle.disabled = !state.output;
+      els.compareToggle.setAttribute('aria-pressed', String(state.compareMode));
       els.enhanceBtn.innerHTML = state.busy ? `<span class="spinner" aria-hidden="true"></span> Generating…` : 'Enhance Prompt';
+      els.out.hidden = state.compareMode;
+      els.compare.hidden = !state.compareMode;
       els.out.textContent = state.output;
+      els.rawOut.textContent = state.lastInput || state.prompt;
+      els.enhancedOut.textContent = state.output;
       els.meta.textContent = state.meta;
       if (state.error) { showError(state.error); } else { clearError(); }
       renderHistory(state.history);
       renderInsights(state.stats);
       renderNetwork(state.online);
+      els.copyRawBtn.disabled = !(state.lastInput || state.prompt);
+      els.copyEnhancedBtn.disabled = !state.output;
     });
 
     // --- Events wired to store
     els.input.addEventListener('input', (e) => {
       const value = e.target.value;
-      persist.set('pe_prompt', value);
+      persist.set(storageKeys.prompt, value);
       store.setState({ prompt: value, stats: analyzePrompt(value) });
     });
-    els.model.addEventListener('change', () => { persist.set('pe_model', els.model.value); store.setState({ model: els.model.value }); });
-    els.stream.addEventListener('change', () => { persist.set('pe_stream', !!els.stream.checked); store.setState({ stream: !!els.stream.checked }); });
-    els.reasoning.addEventListener('change', () => { persist.set('pe_reasoning', !!els.reasoning.checked); store.setState({ reasoning: !!els.reasoning.checked }); });
-    els.proxyMode.addEventListener('change', () => { persist.set('pe_proxy', !!els.proxyMode.checked); store.setState({ proxyMode: !!els.proxyMode.checked }); });
+    els.model.addEventListener('change', () => { persist.set(storageKeys.model, els.model.value); store.setState({ model: els.model.value }); });
+    els.stream.addEventListener('change', () => { persist.set(storageKeys.stream, !!els.stream.checked); store.setState({ stream: !!els.stream.checked }); });
+    els.reasoning.addEventListener('change', () => { persist.set(storageKeys.reasoning, !!els.reasoning.checked); store.setState({ reasoning: !!els.reasoning.checked }); });
+    els.proxyMode.addEventListener('change', () => { persist.set(storageKeys.proxyMode, !!els.proxyMode.checked); store.setState({ proxyMode: !!els.proxyMode.checked }); });
     els.presetSearch?.addEventListener('input', (e) => renderPresets(e.target.value));
     els.themeToggle.addEventListener('click', () => setTheme(store.getState().theme === 'dark' ? 'light' : 'dark'));
+    els.compareToggle.addEventListener('click', () => store.setState((prev) => ({ compareMode: !prev.compareMode })));
 
     // Proxy modal wiring
     const openProxyModal = () => { els.proxyModal?.setAttribute('aria-hidden', 'false'); setTimeout(() => els.proxyUrl?.focus(), 0); };
@@ -804,8 +914,13 @@ Return ONLY the enhanced prompt.`;
     els.proxyCancelBtn?.addEventListener('click', closeProxyModal);
     els.proxySaveBtn?.addEventListener('click', () => {
       const url = (els.proxyUrl?.value || '').trim() || '/proxy';
-      persist.set('pe_proxy_url', url);
-      store.setState({ proxyUrl: url });
+      const normalized = OpenRouterClient.normalizeProxyUrl(url);
+      if (!normalized) {
+        showError('Proxy URL is invalid. Use /proxy or https://host/path.');
+        return;
+      }
+      persist.set(storageKeys.proxyUrl, normalized);
+      store.setState({ proxyUrl: normalized });
       closeProxyModal();
     });
     els.proxyModal?.addEventListener('click', (e) => { if (e.target === els.proxyModal) closeProxyModal(); });
@@ -814,9 +929,9 @@ Return ONLY the enhanced prompt.`;
     // Load models
     async function loadModels() {
       try {
-        const key = (localStorage.getItem('or_api_key') || '').trim();
+        const key = (localStorage.getItem(storageKeys.apiKey) || '').trim();
         if (!key) return;
-        const res = await fetch('https://openrouter.ai/api/v1/models', {
+        const res = await fetch(config.modelListEndpoint, {
           headers: { 'Authorization': `Bearer ${key}` }
         });
         if (!res.ok) throw new Error(`Models list failed: ${res.status}`);
@@ -830,7 +945,7 @@ Return ONLY the enhanced prompt.`;
         const opts = free.length ? free : (data.data || []);
         opts
           .filter(m => (m.architecture?.modality || '').includes('text'))
-          .slice(0, 200)
+          .slice(0, config.maxModels)
           .sort((a,b)=> (a.name || a.id).localeCompare(b.name || b.id))
           .forEach(m => {
             const o = document.createElement('option');
@@ -838,7 +953,7 @@ Return ONLY the enhanced prompt.`;
             o.textContent = `${m.name || m.id}${(m.pricing && (m.pricing.prompt==='0' && m.pricing.completion==='0')) ? ' · FREE' : ''}`;
             els.model.appendChild(o);
           });
-        const saved = persist.get('pe_model', '');
+        const saved = persist.get(storageKeys.model, '');
         if (saved) els.model.value = saved;
         store.setState({ model: els.model.value || store.getState().model });
       } catch (err) {
@@ -846,89 +961,126 @@ Return ONLY the enhanced prompt.`;
       }
     }
     loadModels();
-    els.saveKeyBtn.addEventListener('click', () => { localStorage.setItem('or_api_key', els.apiKey.value.trim()); els.saveKeyBtn.textContent = 'Saved'; setTimeout(()=> els.saveKeyBtn.textContent = 'Save Key', 900); loadModels(); });
+    els.saveKeyBtn.addEventListener('click', () => {
+      localStorage.setItem(storageKeys.apiKey, els.apiKey.value.trim());
+      setButtonFeedback(els.saveKeyBtn, 'Saved');
+      loadModels();
+    });
     let hidden = false;
     els.hideKeyBtn.addEventListener('click', () => { hidden = !hidden; els.apiKey.type = hidden ? 'password' : 'text'; els.hideKeyBtn.textContent = hidden ? 'Show' : 'Hide'; });
-    const savedKey = localStorage.getItem('or_api_key') || '';
+    const savedKey = localStorage.getItem(storageKeys.apiKey) || '';
     if (savedKey) els.apiKey.value = savedKey;
 
     // --- Actions
     const addToHistory = (item) => {
-      const next = [item, ...store.getState().history].slice(0, 5);
-      persist.set('pe_history', next);
+      const next = [item, ...store.getState().history].slice(0, config.maxHistory);
+      persist.set(storageKeys.history, next);
       store.setState({ history: next });
     };
 
+    const isAbortError = (err) => err?.name === 'AbortError' || err?.code === 20;
+    const formatError = (err, usingProxy) => {
+      const raw = String(err?.message || err || '');
+      if (/Missing OpenRouter API key/i.test(raw)) return 'Add your OpenRouter API key or enable the proxy.';
+      if (/Invalid proxy URL/i.test(raw)) return 'Proxy URL is invalid. Use /proxy or https://host/path.';
+      if (/Failed to fetch/i.test(raw)) return usingProxy ? 'Proxy request failed. Check CORS, URL, and connectivity.' : 'Network request failed. Check connection or API key.';
+      if (/Request failed/i.test(raw)) {
+        const cleaned = raw.replace(/\s+Reason:\s*/i, ' - ').trim();
+        return cleaned.slice(0, 160);
+      }
+      return 'Request failed. Check your key, model, or proxy.';
+    };
+
+    let requestCounter = 0;
     const enhance = async (useLast=false) => {
-      const text = store.getState().prompt.trim();
+      const state = store.getState();
+      const text = (useLast && state.lastInput ? state.lastInput : state.prompt).trim();
       if (!text) { showError('Please enter a prompt to enhance.'); return; }
       clearError();
-      store.setState({ busy: true, output: '', meta: '', error: '' });
-      const payload = useLast && store.getState().lastPayload ? store.getState().lastPayload : buildPayload(store.getState());
+      client.abort();
+      const runId = ++requestCounter;
+      store.setState({ busy: true, output: '', meta: '', error: '', lastInput: text });
+      let payload = useLast && state.lastPayload ? state.lastPayload : buildPayload(state);
       const t0 = performance.now();
       try {
         let content = '';
-        content = await client.request(payload, {
-          usingProxy: store.getState().proxyMode,
-          proxyUrl: store.getState().proxyUrl,
-          onChunk: (chunk) => { store.setState((prev) => ({ output: prev.output + chunk })); }
-        });
-        const t1 = performance.now();
-        const meta = `Model: ${payload.model} · ${Math.round(t1 - t0)} ms · ${payload.stream ? 'streamed' : 'non-stream'}`;
-        store.setState({ meta, busy: false, lastPayload: payload, output: content });
-        els.copyBtn.disabled = !content;
-        els.retryBtn.disabled = false;
-        addToHistory({ input: text, output: content, model: payload.model, ts: Date.now() });
-      } catch (e) {
-        const msg = String(e?.message || e || '');
-        const hadOnline = (payload.model || '').includes(':online');
-        const is404 = /\b404\b/.test(msg);
-        if (hadOnline && is404) {
-          try {
-            const fallbackPayload = { ...payload, model: payload.model.replace(':online','') };
-            const content = await client.request(fallbackPayload, {
+        try {
+          content = await client.request(payload, {
+            usingProxy: store.getState().proxyMode,
+            proxyUrl: store.getState().proxyUrl,
+            onChunk: (chunk) => { store.setState((prev) => ({ output: prev.output + chunk })); }
+          });
+        } catch (err) {
+          if (isAbortError(err)) throw err;
+          const msg = String(err?.message || err || '');
+          const hadOnline = (payload.model || '').includes(':online');
+          const is404 = /\b404\b/.test(msg);
+          if (hadOnline && is404) {
+            payload = { ...payload, model: payload.model.replace(':online','') };
+            content = await client.request(payload, {
               usingProxy: store.getState().proxyMode,
               proxyUrl: store.getState().proxyUrl,
               onChunk: (chunk) => { store.setState((prev) => ({ output: prev.output + chunk })); }
             });
-            const t1 = performance.now();
-            const meta = `Model: ${fallbackPayload.model} · ${Math.round(t1 - t0)} ms · fallback from :online`;
-            store.setState({ meta, busy: false, lastPayload: fallbackPayload, output: content });
-            addToHistory({ input: text, output: content, model: fallbackPayload.model, ts: Date.now() });
-            return;
-          } catch (err2) {
-            console.error(err2);
-            store.setState({ error: String(err2.message || err2) });
+          } else {
+            throw err;
           }
-        } else {
-          console.error(e);
-          store.setState({ error: msg });
         }
+        const t1 = performance.now();
+        const meta = `Model: ${payload.model} · ${Math.round(t1 - t0)} ms · ${payload.stream ? 'streamed' : 'non-stream'}`;
+        if (runId !== requestCounter) return;
+        store.setState({ meta, busy: false, lastPayload: payload, output: content });
+        addToHistory({ input: text, output: content, model: payload.model, ts: Date.now() });
+      } catch (e) {
+        if (runId !== requestCounter) return;
+        if (isAbortError(e)) {
+          store.setState({ meta: 'Canceled.' });
+          return;
+        }
+        console.error(e);
+        store.setState({ error: formatError(e, store.getState().proxyMode) });
       } finally {
-        store.setState({ busy: false });
+        if (runId === requestCounter) {
+          store.setState({ busy: false });
+        }
       }
     };
 
     els.enhanceBtn.addEventListener('click', () => enhance(false));
     els.retryBtn.addEventListener('click', () => enhance(true));
-    els.copyBtn.addEventListener('click', async () => {
+    els.copyRawBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(store.getState().lastInput || store.getState().prompt);
+        setButtonFeedback(els.copyRawBtn, 'Copied!');
+      } catch {
+        showError('Clipboard permission blocked.');
+      }
+    });
+    els.copyEnhancedBtn.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(store.getState().output);
-        els.copyBtn.textContent = 'Copied!';
-        setTimeout(()=> els.copyBtn.textContent = 'Copy', 900);
+        setButtonFeedback(els.copyEnhancedBtn, 'Copied!');
       } catch {
         showError('Clipboard permission blocked.');
       }
     });
     els.clearBtn.addEventListener('click', () => {
-      store.setState({ prompt: '', output: '', meta: '', lastPayload: null, stats: analyzePrompt('') });
-      persist.set('pe_prompt', '');
+      client.abort();
+      store.setState({ prompt: '', output: '', meta: '', lastPayload: null, stats: analyzePrompt(''), lastInput: '', compareMode: false });
+      persist.set(storageKeys.prompt, '');
       els.input.focus();
     });
-    els.clearHistoryBtn.addEventListener('click', () => { persist.set('pe_history', []); store.setState({ history: [] }); });
+    els.clearHistoryBtn.addEventListener('click', () => { persist.set(storageKeys.history, []); store.setState({ history: [] }); });
 
     document.addEventListener('keydown', (e)=>{
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') enhance(false);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        const tag = (e.target?.tagName || '').toLowerCase();
+        if (!['input', 'textarea', 'select'].includes(tag) && !e.target?.isContentEditable) {
+          e.preventDefault();
+          els.input.focus();
+        }
+      }
     });
 
     // --- Export / Import
@@ -960,16 +1112,16 @@ Return ONLY the enhanced prompt.`;
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        if (data.prompt) { persist.set('pe_prompt', data.prompt); }
-        if (data.history) { persist.set('pe_history', data.history); }
+        if (data.prompt) { persist.set(storageKeys.prompt, data.prompt); }
+        if (data.history) { persist.set(storageKeys.history, data.history); }
         if (data.settings) {
           const keyMap = {
-            model: 'pe_model',
-            stream: 'pe_stream',
-            reasoning: 'pe_reasoning',
-            proxyMode: 'pe_proxy',
-            proxyUrl: 'pe_proxy_url',
-            theme: 'pe_theme'
+            model: storageKeys.model,
+            stream: storageKeys.stream,
+            reasoning: storageKeys.reasoning,
+            proxyMode: storageKeys.proxyMode,
+            proxyUrl: storageKeys.proxyUrl,
+            theme: storageKeys.theme
           };
           Object.entries(data.settings).forEach(([k,v]) => persist.set(keyMap[k] || `pe_${k}`, v));
         }

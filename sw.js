@@ -1,5 +1,5 @@
 // Progressive Web App service worker with Stale-While-Revalidate
-const SHELL_CACHE = 'pe-shell-v2';
+const SHELL_CACHE = 'pe-shell-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -45,7 +45,11 @@ const networkFirst = async (request) => {
     return fresh;
   } catch {
     const cache = await caches.open(SHELL_CACHE);
-    const fallback = await cache.match('./') || await cache.match('/index.html');
+    const fallback =
+      await cache.match('./index.html') ||
+      await cache.match('/index.html') ||
+      await cache.match('./') ||
+      await cache.match('/');
     return fallback || new Response('<h1>Offline</h1>', { headers: { 'Content-Type': 'text/html' } });
   }
 };
@@ -55,6 +59,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (req.method !== 'GET') return;
   if (url.origin !== location.origin) return;
+  if (url.pathname.startsWith('/proxy')) return;
 
   if (req.mode === 'navigate') {
     event.respondWith(networkFirst(req));

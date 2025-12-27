@@ -16,7 +16,8 @@ Deploy `proxy.js` as a Cloudflare Worker (or Vercel Edge function) with `OPENROU
 - SSE streaming for instant token updates
 - Prompt quality insights (clarity score, word count, warnings) with actionable hints
 - Preset library for common workflows (research briefs, QA plans, exec summaries, JSON/table formats)
-- Clipboard copy, retry, clear
+- Compare view (raw vs enhanced) with copy raw/enhanced
+- Clipboard copy, retry, clear (Ctrl/Cmd+Enter to run, Ctrl/Cmd+K to focus prompt)
 - Auto-fetch model list; filters free models based on pricing
 - Optional `Web Search` toggle appends `:online` to the model for OpenRouter web search
 - Backup/restore of local session state (prompt, history, settings) via JSON
@@ -39,6 +40,7 @@ Deploy `proxy.js` as a Cloudflare Worker (or Vercel Edge function) with `OPENROU
 - Serve the app over HTTP(S) with a simple server (PWA requires http/https): for example `python3 -m http.server` and open `http://localhost:8000`.
 - Add to home screen when prompted or via Chrome menu. The banner will appear if not installed and not dismissed in the current session.
 - Toggle airplane mode and verify previously visited pages load, output/history remain accessible.
+ - Refresh on a deep link (e.g. `/#history`) while offline to confirm the shell fallback renders.
 
 ## Notes on Security
 - A strict CSP is included while still allowing inline styles/scripts used by the app.
